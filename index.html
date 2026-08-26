@@ -12,13 +12,18 @@
       content="width=device-width, initial-scale=1<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover<% } %>"
     />
 
-    <link rel="icon" type="image/png" sizes="128x128" href="icons/favicon-128x128.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
-    <link rel="icon" type="image/ico" href="favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="icons/orado-pwa-icon.svg" />
   </head>
   <body>
+    <div id="orado-splash" role="status" aria-label="Memuat ORADO">
+      <img src="icons/orado-pwa-icon.svg" alt="ORADO" />
+      <span>ORADO Kota Probolinggo</span>
+    </div>
     <!-- quasar:entry-point -->
+    <style>
+      #orado-splash { position: fixed; inset: 0; z-index: 9999; display: grid; place-content: center; gap: 16px; color: #fff; background: #002451; font: 700 14px/1.2 Arial, sans-serif; letter-spacing: .3px; text-align: center; transition: opacity .2s ease, visibility .2s ease; }
+      #orado-splash img { width: 112px; height: 112px; margin: auto; border-radius: 24px; box-shadow: 0 16px 34px rgba(0, 0, 0, .22); }
+      #orado-splash.is-hidden { opacity: 0; visibility: hidden; }
+    </style>
   </body>
 </html>
