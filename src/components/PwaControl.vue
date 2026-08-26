@@ -2,7 +2,7 @@
   <q-dialog v-model="installDialog">
     <q-card class="install-card">
       <q-card-section class="install-head text-center">
-        <q-avatar size="66px" class="install-logo"><img src="@/assets/orado/logo-white.svg" alt="ORADO" /></q-avatar>
+        <div class="install-logo"><img src="@/assets/orado/logo-white.svg" alt="ORADO" /></div>
         <div class="text-subtitle1 text-weight-bold q-mt-sm">Instal ORADO Pengurus</div>
         <div class="text-caption text-blue-grey-7 q-mt-xs">Akses cepat dari layar utama perangkat Anda.</div>
       </q-card-section>
@@ -73,5 +73,5 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.install-card { width: min(390px, calc(100vw - 28px)); border-radius: 18px; }.install-head { padding-top: 24px; }.install-logo { padding: 6px; background: #073572; }.install-logo img { width: 100%; height: 100%; object-fit: contain; }.benefit { display: flex; align-items: center; gap: 9px; padding: 7px 2px; color: #304967; font-size: 12px; }.manual-guide { margin-top: 10px; padding: 10px; border-radius: 9px; color: #607187; background: #f1f6fc; font-size: 11px; line-height: 1.45; }
+.install-card { width: min(390px, calc(100vw - 28px)); border-radius: 18px; }.install-head { padding-top: 24px; }.install-logo { display: grid; width: 66px; height: 66px; box-sizing: border-box; margin: 0 auto; padding: 6px; place-items: center; border-radius: 50%; background: #073572; }.install-logo img { display: block; width: 54px; height: 54px; object-fit: contain; transform: translateY(1px); }.benefit { display: flex; align-items: center; gap: 9px; padding: 7px 2px; color: #304967; font-size: 12px; }.manual-guide { margin-top: 10px; padding: 10px; border-radius: 9px; color: #607187; background: #f1f6fc; font-size: 11px; line-height: 1.45; }
 </style>
