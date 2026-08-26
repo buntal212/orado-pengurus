@@ -8,6 +8,7 @@ export default boot(() => {
   })
 
   window.addEventListener('appinstalled', () => {
+    window.localStorage.setItem('orado-pwa-installed', '1')
     window.__oradoInstallPrompt = null
     window.dispatchEvent(new CustomEvent('orado:pwa-installed'))
   })

@@ -18,17 +18,31 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="updateDialog" persistent>
+    <q-card class="install-card">
+      <q-card-section class="install-head text-center">
+        <q-icon name="system_update" size="52px" color="primary" />
+        <div class="text-subtitle1 text-weight-bold q-mt-sm">Pembaruan tersedia</div>
+        <div class="text-caption text-blue-grey-7 q-mt-xs">Versi terbaru ORADO sudah siap. Perbarui agar fitur dan perbaikan terbaru dapat digunakan.</div>
+      </q-card-section>
+      <q-card-actions align="right" class="q-px-md q-pb-md">
+        <q-btn flat no-caps label="Nanti" color="grey-7" @click="updateDialog = false" />
+        <q-btn unelevated no-caps label="Update sekarang" color="primary" icon="system_update" @click="applyUpdate" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useQuasar } from 'quasar'
 
-const $q = useQuasar()
 const installDialog = ref(false)
 const canInstall = ref(Boolean(window.__oradoInstallPrompt))
+const updateDialog = ref(false)
+const updateRegistration = ref(null)
 const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
-const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+const installStateKey = 'orado-pwa-installed'
+const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || document.referrer.startsWith('android-app://') || window.localStorage.getItem(installStateKey) === '1'
 const manualGuide = computed(() => isIos
   ? 'Di Safari, tekan Bagikan lalu pilih Tambahkan ke Layar Utama.'
   : 'Buka menu browser lalu pilih Instal aplikasi atau Tambahkan ke layar utama.')
@@ -37,37 +51,47 @@ async function installApp() {
   const prompt = window.__oradoInstallPrompt
   if (!prompt) return
   await prompt.prompt()
-  await prompt.userChoice
+  const result = await prompt.userChoice
+  if (result.outcome === 'accepted') markInstalled()
+  else installDialog.value = false
+}
+
+function markInstalled() {
+  window.localStorage.setItem(installStateKey, '1')
+  window.__oradoInstallPrompt = null
+  canInstall.value = false
   installDialog.value = false
 }
 
-async function applyUpdate(registration) {
-  const worker = registration?.waiting
+async function applyUpdate() {
+  updateDialog.value = false
+  const worker = updateRegistration.value?.waiting
   if (worker) worker.postMessage({ type: 'SKIP_WAITING' })
   else window.location.reload()
 }
 
 function showUpdate(event) {
-  $q.notify({
-    color: 'orange', textColor: 'dark', icon: 'system_update', timeout: 0, multiLine: true,
-    message: 'Versi ORADO Pengurus terbaru tersedia.',
-    actions: [{ label: 'Nanti', color: 'dark' }, { label: 'Update sekarang', color: 'primary', handler: () => applyUpdate(event.detail?.registration) }],
-  })
+  updateRegistration.value = event.detail?.registration || null
+  updateDialog.value = true
 }
 
 function installReady() {
+  if (isInstalled()) return
   canInstall.value = true
-  if (!isInstalled()) installDialog.value = true
+  installDialog.value = true
 }
 
 onMounted(() => {
-  if (!isInstalled()) window.setTimeout(() => { installDialog.value = true }, 600)
+  if (isInstalled()) markInstalled()
+  else window.setTimeout(() => { installDialog.value = true }, 600)
   window.addEventListener('orado:pwa-install-ready', installReady)
+  window.addEventListener('orado:pwa-installed', markInstalled)
   window.addEventListener('orado:pwa-update-available', showUpdate)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('orado:pwa-install-ready', installReady)
+  window.removeEventListener('orado:pwa-installed', markInstalled)
   window.removeEventListener('orado:pwa-update-available', showUpdate)
 })
 </script>

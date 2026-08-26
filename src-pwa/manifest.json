@@ -1,4 +1,6 @@
 {
+  "name": "Orado App",
+  "short_name": "Orado App",
   "orientation": "portrait",
   "background_color": "#002451",
   "theme_color": "#002451",
