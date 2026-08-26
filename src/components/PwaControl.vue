@@ -42,7 +42,7 @@ const updateDialog = ref(false)
 const updateRegistration = ref(null)
 const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
 const installStateKey = 'orado-pwa-installed'
-const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || document.referrer.startsWith('android-app://') || window.localStorage.getItem(installStateKey) === '1'
+const isInstalled = () => ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay'].some((mode) => window.matchMedia(`(display-mode: ${mode})`).matches) || window.navigator.standalone === true || document.referrer.startsWith('android-app://') || window.localStorage.getItem(installStateKey) === '1'
 const manualGuide = computed(() => isIos
   ? 'Di Safari, tekan Bagikan lalu pilih Tambahkan ke Layar Utama.'
   : 'Buka menu browser lalu pilih Instal aplikasi atau Tambahkan ke layar utama.')

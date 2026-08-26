@@ -190,11 +190,11 @@ function openMenu(menu) {
 
 .bottom-nav {
   position: fixed; right: 0; bottom: 0; left: 0; z-index: 10; display: flex;
-  justify-content: center; gap: 34px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+  justify-content: center; gap: 38px; padding: 11px 12px calc(11px + env(safe-area-inset-bottom));
   border-top: 1px solid rgba(255, 255, 255, .14); background: #002451;
 }
-.nav-item { display: flex; min-width: 58px; flex-direction: column; align-items: center; gap: 2px; padding: 2px 8px; border: 0; color: rgba(255, 255, 255, .72); background: transparent; font-family: inherit; font-size: 8px; cursor: pointer; }
-.nav-item > .q-icon, .notification-icon > .q-icon { font-size: 19px; }
+.nav-item { display: flex; min-width: 66px; flex-direction: column; align-items: center; gap: 4px; padding: 3px 9px; border: 0; color: rgba(255, 255, 255, .72); background: transparent; font-family: inherit; font-size: 10px; cursor: pointer; }
+.nav-item > .q-icon, .notification-icon > .q-icon { font-size: 24px; }
 .nav-item--active { color: #fff; font-weight: 700; }
 .notification-icon { position: relative; display: inline-flex; width: 22px; height: 20px; align-items: center; justify-content: center; }
 .notification-icon i { position: absolute; top: -5px; right: -4px; display: grid; width: 14px; height: 14px; place-items: center; border: 2px solid #002451; border-radius: 50%; color: #fff; background: #ef3b35; font-size: 7px; font-style: normal; font-weight: 700; line-height: 1; }
