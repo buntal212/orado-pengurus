@@ -34,5 +34,17 @@ export default defineRouter((/* { store, ssrContext } */) => {
     history: createHistory(import.meta.env.QUASAR_VUE_ROUTER_BASE),
   })
 
+  Router.beforeEach((to) => {
+    const hasToken = Boolean(
+      localStorage.getItem('orado_pengurus_token') ||
+      sessionStorage.getItem('orado_pengurus_token'),
+    )
+
+    if (to.meta.requiresAuth && !hasToken) return '/login'
+    if (to.meta.guestOnly && hasToken) return '/'
+
+    return true
+  })
+
   return Router
 })

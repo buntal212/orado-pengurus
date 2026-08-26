@@ -1,81 +1,8 @@
-<template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
-
-        <q-toolbar-title> Quasar App </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
-      </q-toolbar>
-    </q-header>
-
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-list>
-        <q-item-label header> Essential Links </q-item-label>
-
-        <EssentialLink v-for="link in linksList" :key="link.label" v-bind="link" />
-      </q-list>
-    </q-drawer>
-
-    <q-page-container>
-      <router-view />
-    </q-page-container>
-  </q-layout>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-import EssentialLink from '@/components/EssentialLink.vue'
-
-const linksList = [
-  {
-    label: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev',
-  },
-  {
-    label: 'GitHub',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework',
-  },
-  {
-    label: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev',
-  },
-  {
-    label: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev',
-  },
-  {
-    label: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev',
-  },
-  {
-    label: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev',
-  },
-  {
-    label: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev',
-  },
-]
-
-const leftDrawerOpen = ref(false)
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
-</script>
+<template><q-layout view="lHh Lpr lFf" class="app-shell"><q-header class="app-header"><q-toolbar class="sso-toolbar"><q-avatar size="30px" class="header-logo"><img src="@/assets/orado/logo-white.svg" alt="ORADO" /></q-avatar><q-toolbar-title>ORADO Kota Probolinggo</q-toolbar-title><q-btn flat round dense icon="notifications_none" aria-label="Notifikasi"><q-badge floating rounded color="red" label="3" /></q-btn></q-toolbar></q-header><q-page-container><router-view /></q-page-container></q-layout></template>
+<style lang="scss" scoped>
+.app-shell { width: 100%; min-height: 100vh; background: #f7f9fc; }
+.app-header { color: #fff; background: #002451; }
+.sso-toolbar { width: 100%; max-width: 1030px; min-height: 58px; margin: 0 auto; padding: 0 10px; }
+.q-toolbar-title { padding-left: 6px; font-size: 14px; font-weight: 700; letter-spacing: .2px; }
+.header-logo { display: grid; place-items: center; background: rgba(255,255,255,.1); }.header-logo img { width: 25px; height: 25px; object-fit: contain; }
+</style>
