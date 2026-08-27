@@ -3,7 +3,7 @@
 
 import { defineConfig } from '#q-app'
 
-export default defineConfig((/* ctx */) => {
+export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -34,6 +34,7 @@ export default defineConfig((/* ctx */) => {
     build: {
       env: {
         clientPrefix: 'VITE_',
+        file: ctx.dev ? [] : '.env.production',
       },
       target: {
         // browser: 'baseline-widely-available',
@@ -176,7 +177,7 @@ export default defineConfig((/* ctx */) => {
     pwa: {
       workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
       extendPWAGenerateSWOptions(options) {
-        options.skipWaiting = false
+        options.skipWaiting = true
         options.clientsClaim = true
         options.cleanupOutdatedCaches = true
       },
