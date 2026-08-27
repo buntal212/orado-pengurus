@@ -94,6 +94,13 @@ export const useVerifikasiStore = defineStore('verifikasi', {
       }
     },
 
+    async verifyRegularMember(item) {
+      this.memberForm = { id: item.id, name: item.name, jabatan: '' }
+      const verified = await this.verifyMember()
+      if (!verified) this.memberForm = initialMemberForm()
+      return verified
+    },
+
     async updateClub(id, action) {
       this.saving = true
       try {
