@@ -27,25 +27,37 @@ jobs:
         run: |
           echo 'VITE_APP_NAME="Orado Pengurus"' > .env.production
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env.production
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env.production
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env.production
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env.production
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env.production
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env.production
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env.production
+          echo "VITE_FIREBASE_VAPID_KEY=${{ secrets.VITE_FIREBASE_VAPID_KEY }}" >> .env.production
 
-      - name: Check production env
+      - name: Verify production env
         run: |
-          echo "=== .env.production ==="
-          cat .env.production
-          echo "======================="
+          test -n "${{ secrets.VITE_API_URL }}" || (echo "VITE_API_URL kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_API_KEY }}" || (echo "VITE_FIREBASE_API_KEY kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" || (echo "VITE_FIREBASE_AUTH_DOMAIN kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" || (echo "VITE_FIREBASE_PROJECT_ID kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" || (echo "VITE_FIREBASE_STORAGE_BUCKET kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" || (echo "VITE_FIREBASE_MESSAGING_SENDER_ID kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_APP_ID }}" || (echo "VITE_FIREBASE_APP_ID kosong" && exit 1)
+          test -n "${{ secrets.VITE_FIREBASE_VAPID_KEY }}" || (echo "VITE_FIREBASE_VAPID_KEY kosong" && exit 1)
+          echo "Semua production environment tersedia."
 
       - name: Build Quasar PWA
         run: npm run build
 
-      - name: Check built API URL
+      - name: Check development URL
         run: |
-          echo "=== CARI URL DEVELOPMENT ==="
-          grep -R "api-orado.test" dist/pwa || true
-
-          echo "=== CARI URL PRODUCTION ==="
-          grep -R "apiorado.orado-kota-probolinggo.my.id" dist/pwa || true
-
-          echo "=== SELESAI ==="
+          if grep -R "api-orado.test" dist/pwa; then
+            echo "ERROR: URL development masih ditemukan!"
+            exit 1
+          else
+            echo "OK: URL development tidak ditemukan."
+          fi
 
       - name: Setup SSH
         run: |
