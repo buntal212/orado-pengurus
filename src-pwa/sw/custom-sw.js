@@ -1,10 +1,10 @@
 /*
- * Custom Service Worker ORADO Pengurus
+ * ORADO Pengurus Custom Service Worker
  * Quasar PWA - InjectManifest
  */
 
 import { clientsClaim } from 'workbox-core'
-import { initializeApp, getApps, getApp } from 'firebase/app'
+import { initializeApp } from 'firebase/app'
 import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import {
@@ -28,28 +28,42 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-const firebaseAppName = 'orado-pengurus-sw'
+console.log('[ORADO SW] Firebase projectId:', firebaseConfig.projectId)
+console.log('[ORADO SW] Firebase appId tersedia:', Boolean(firebaseConfig.appId))
+console.log(
+  '[ORADO SW] Firebase messagingSenderId tersedia:',
+  Boolean(firebaseConfig.messagingSenderId),
+)
 
-const firebaseApp = getApps().some((app) => app.name === firebaseAppName)
-  ? getApp(firebaseAppName)
-  : initializeApp(firebaseConfig, firebaseAppName)
+if (
+  firebaseConfig.apiKey &&
+  firebaseConfig.projectId &&
+  firebaseConfig.appId &&
+  firebaseConfig.messagingSenderId
+) {
+  const firebaseApp = initializeApp(firebaseConfig)
 
-const messaging = getMessaging(firebaseApp)
+  console.log('[ORADO SW] Firebase app projectId:', firebaseApp.options.projectId)
 
-onBackgroundMessage(messaging, (payload) => {
-  const title = payload.notification?.title || 'ORADO Pengurus'
-  const body = payload.notification?.body || 'Ada notifikasi baru.'
-  const target = internalPath(payload.data?.url || payload.data?.route)
+  const messaging = getMessaging(firebaseApp)
 
-  self.registration.showNotification(title, {
-    body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-192x192.png',
-    data: {
-      target,
-    },
+  onBackgroundMessage(messaging, (payload) => {
+    const title = payload.notification?.title || 'ORADO Pengurus'
+    const body = payload.notification?.body || 'Ada notifikasi baru.'
+    const target = internalPath(payload.data?.url || payload.data?.route)
+
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      data: {
+        target,
+      },
+    })
   })
-})
+} else {
+  console.error('[ORADO SW] Firebase config tidak lengkap')
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
