@@ -25,10 +25,8 @@ jobs:
 
       - name: Create production env
         run: |
-          cat > .env.production <<EOF
-          VITE_APP_NAME="Orado Pengurus"
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
-          EOF
+          echo 'VITE_APP_NAME="Orado Pengurus"' > .env.production
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env.production
 
       - name: Build Quasar PWA
         run: npm run build
@@ -57,4 +55,3 @@ jobs:
             -e "ssh -i ~/.ssh/id_ed25519" \
             dist/pwa/ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/www/wwwroot/pengurusapp.orado-kota-probolinggo.my.id/"
-# ORADO Pengurus automatic deployment
