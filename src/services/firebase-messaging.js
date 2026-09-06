@@ -1,6 +1,17 @@
 import { getToken } from 'firebase/messaging'
+
 import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
+
+async function getFirebaseServiceWorkerRegistration() {
+  if (!('serviceWorker' in navigator)) {
+    throw new Error('Service worker belum didukung browser ini.')
+  }
+
+  return navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+    scope: '/firebase-messaging/',
+  })
+}
 
 export async function enablePushNotification() {
   try {
@@ -22,11 +33,8 @@ export async function enablePushNotification() {
       throw new Error('Izin notifikasi belum diberikan.')
     }
 
-    if (!('serviceWorker' in navigator)) {
-      throw new Error('Service worker belum didukung browser ini.')
-    }
+    const registration = await getFirebaseServiceWorkerRegistration()
 
-    const registration = await navigator.serviceWorker.ready
     const token = await getToken(messaging, {
       vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
       serviceWorkerRegistration: registration,
@@ -55,14 +63,22 @@ export async function enablePushNotification() {
 
 export async function removePushNotificationToken() {
   try {
-    if (!messaging || !('Notification' in window) || Notification.permission !== 'granted') return
-    if (!('serviceWorker' in navigator)) return
+    if (!messaging || !('Notification' in window) || Notification.permission !== 'granted') {
+      return
+    }
+
+    const registration = await getFirebaseServiceWorkerRegistration()
 
     const token = await getToken(messaging, {
       vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: await navigator.serviceWorker.ready,
+      serviceWorkerRegistration: registration,
     })
-    if (token) await api.delete('/fcm/token', { data: { token } })
+
+    if (token) {
+      await api.delete('/fcm/token', {
+        data: { token },
+      })
+    }
   } catch {
     // Kegagalan penghapusan token tidak boleh menghambat logout.
   }
@@ -70,6 +86,7 @@ export async function removePushNotificationToken() {
 
 function getDeviceName() {
   const userAgent = navigator.userAgent
+
   const browser = /Edg\//.test(userAgent)
     ? 'Edge'
     : /Firefox\//.test(userAgent)
@@ -81,6 +98,7 @@ function getDeviceName() {
           : /Safari\//.test(userAgent)
             ? 'Safari'
             : 'Browser'
+
   const platform = /iPhone|iPad|iPod/.test(userAgent)
     ? 'iPhone'
     : /Android/.test(userAgent)
@@ -97,7 +115,10 @@ function getDeviceName() {
 }
 
 function getErrorMessage(error) {
-  if (error.response?.status === 401) return 'Sesi login berakhir. Silakan masuk kembali.'
+  if (error.response?.status === 401) {
+    return 'Sesi login berakhir. Silakan masuk kembali.'
+  }
+
   if (error.response?.status === 422) {
     return (
       error.response?.data?.errors?.token?.[0] ||
@@ -105,8 +126,14 @@ function getErrorMessage(error) {
       'Data notifikasi tidak valid.'
     )
   }
-  if (error.response?.data?.message) return error.response.data.message
-  if (error.message) return error.message
+
+  if (error.response?.data?.message) {
+    return error.response.data.message
+  }
+
+  if (error.message) {
+    return error.message
+  }
 
   return 'Notifikasi belum dapat diaktifkan. Periksa koneksi internet Anda.'
 }
