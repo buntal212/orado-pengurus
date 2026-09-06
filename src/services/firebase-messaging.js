@@ -3,52 +3,12 @@ import { getToken } from 'firebase/messaging'
 import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
 
-async function waitForActiveServiceWorker(registration) {
-  if (registration.active) {
-    return registration
-  }
-
-  const worker = registration.installing || registration.waiting
-
-  if (!worker) {
-    throw new Error('Firebase service worker tidak dapat diaktifkan.')
-  }
-
-  await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Firebase service worker terlalu lama untuk aktif.'))
-    }, 15000)
-
-    const checkState = () => {
-      if (worker.state === 'activated') {
-        clearTimeout(timeout)
-        resolve()
-      }
-
-      if (worker.state === 'redundant') {
-        clearTimeout(timeout)
-        reject(new Error('Firebase service worker gagal diaktifkan.'))
-      }
-    }
-
-    worker.addEventListener('statechange', checkState)
-
-    checkState()
-  })
-
-  return registration
-}
-
 async function getFirebaseServiceWorkerRegistration() {
   if (!('serviceWorker' in navigator)) {
     throw new Error('Service worker belum didukung browser ini.')
   }
 
-  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-    scope: '/firebase-messaging/',
-  })
-
-  return waitForActiveServiceWorker(registration)
+  return navigator.serviceWorker.ready
 }
 
 export async function enablePushNotification() {
