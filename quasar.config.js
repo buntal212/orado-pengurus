@@ -36,30 +36,39 @@ export default defineConfig((ctx) => {
         clientPrefix: 'VITE_',
         file: ctx.dev ? [] : '.env.production',
       },
+
+      define: {
+        'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(process.env.VITE_FIREBASE_API_KEY),
+        'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(
+          process.env.VITE_FIREBASE_AUTH_DOMAIN,
+        ),
+        'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(
+          process.env.VITE_FIREBASE_PROJECT_ID,
+        ),
+        'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(
+          process.env.VITE_FIREBASE_STORAGE_BUCKET,
+        ),
+        'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(
+          process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        ),
+        'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify(process.env.VITE_FIREBASE_APP_ID),
+        'import.meta.env.VITE_FIREBASE_VAPID_KEY': JSON.stringify(
+          process.env.VITE_FIREBASE_VAPID_KEY,
+        ),
+      },
+
       target: {
         // browser: 'baseline-widely-available',
         // node: 'node22'
       },
 
-      // https://v2.quasar.dev/quasar-cli-vite/page-routing-with-vue-router#filename-based-routing
-      // filenameBasedRouting: true,
-
-      vueRouterMode: 'history', // available values: 'hash', 'history'
-      // vueRouterBase,
+      vueRouterMode: 'history',
 
       // publicPath: '/',
       // define: {},
-      // defineEnv: {}
       // ignorePublicFolder: true,
       // minify: false,
       // distDir
-
-      // extendViteConf (viteConf) {},
-      // viteVuePluginOptions: {},
-
-      // to write components with JSX/TSX:
-      // https://v2.quasar.dev/quasar-cli-vite/handling-vite#jsx-tsx
-      // vueJsx: true,
 
       vitePlugins: [
         [
