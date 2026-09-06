@@ -37,6 +37,16 @@ jobs:
       - name: Build Quasar PWA
         run: npm run build
 
+      - name: Check built API URL
+        run: |
+          echo "=== CARI URL DEVELOPMENT ==="
+          grep -R "api-orado.test" dist/pwa || true
+
+          echo "=== CARI URL PRODUCTION ==="
+          grep -R "apiorado.orado-kota-probolinggo.my.id" dist/pwa || true
+
+          echo "=== SELESAI ==="
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
