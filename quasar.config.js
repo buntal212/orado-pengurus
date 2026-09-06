@@ -184,16 +184,35 @@ export default defineConfig((ctx) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'InjectManifest', // Firebase background messaging memakai service worker Quasar yang sama.
-      // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.json',
-      // extendPWAManifestJson (json) {},
-      // useCredentialsForManifestTag: true,
-      // injectPWAMetaTags: false,
-      // extendPWACustomSWConf (rolldownConf) {},
-      // extendPWAGenerateSWOptions (cfg) {},
-      // extendPWAInjectManifestOptions (cfg) {},
-      // extendPWASwTsConfig (tsConfig) {}
+      workboxMode: 'InjectManifest',
+
+      extendPWACustomSWConf(rolldownConf) {
+        rolldownConf.define = {
+          ...(rolldownConf.define || {}),
+
+          'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(
+            process.env.VITE_FIREBASE_API_KEY,
+          ),
+
+          'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(
+            process.env.VITE_FIREBASE_AUTH_DOMAIN,
+          ),
+
+          'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(
+            process.env.VITE_FIREBASE_PROJECT_ID,
+          ),
+
+          'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(
+            process.env.VITE_FIREBASE_STORAGE_BUCKET,
+          ),
+
+          'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(
+            process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+          ),
+
+          'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify(process.env.VITE_FIREBASE_APP_ID),
+        }
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova
