@@ -28,22 +28,31 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-console.log('[ORADO SW] Firebase projectId:', firebaseConfig.projectId)
-console.log('[ORADO SW] Firebase appId tersedia:', Boolean(firebaseConfig.appId))
-console.log(
-  '[ORADO SW] Firebase messagingSenderId tersedia:',
-  Boolean(firebaseConfig.messagingSenderId),
-)
+console.log('[ORADO SW] Firebase config', {
+  hasApiKey: Boolean(firebaseConfig.apiKey),
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  messagingSenderId: firebaseConfig.messagingSenderId,
+  appId: firebaseConfig.appId,
+})
 
-if (
-  firebaseConfig.apiKey &&
-  firebaseConfig.projectId &&
-  firebaseConfig.appId &&
-  firebaseConfig.messagingSenderId
-) {
+try {
+  if (
+    !firebaseConfig.apiKey ||
+    !firebaseConfig.projectId ||
+    !firebaseConfig.messagingSenderId ||
+    !firebaseConfig.appId
+  ) {
+    throw new Error('Firebase config service worker tidak lengkap')
+  }
+
   const firebaseApp = initializeApp(firebaseConfig)
 
-  console.log('[ORADO SW] Firebase app projectId:', firebaseApp.options.projectId)
+  console.log('[ORADO SW] Firebase initialized', {
+    name: firebaseApp.name,
+    projectId: firebaseApp.options.projectId,
+  })
 
   const messaging = getMessaging(firebaseApp)
 
@@ -61,8 +70,8 @@ if (
       },
     })
   })
-} else {
-  console.error('[ORADO SW] Firebase config tidak lengkap')
+} catch (error) {
+  console.error('[ORADO SW] Firebase Messaging gagal diinisialisasi:', error)
 }
 
 self.addEventListener('notificationclick', (event) => {
