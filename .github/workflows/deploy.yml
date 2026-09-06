@@ -57,3 +57,4 @@ jobs:
             -e "ssh -i ~/.ssh/id_ed25519" \
             dist/pwa/ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/www/wwwroot/pengurusapp.orado-kota-probolinggo.my.id/"
+# ORADO Pengurus automatic deployment
