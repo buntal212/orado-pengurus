@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from '@/boot/axios'
+import { removePushNotificationToken } from '@/services/firebase-messaging'
 
 export const useLoginStore = defineStore('login', {
   state: () => ({
@@ -61,6 +62,7 @@ export const useLoginStore = defineStore('login', {
       this.loading = true
 
       try {
+        await removePushNotificationToken()
         await api.post('/v1/auth/logout')
       } catch (error) {
         console.error(error)

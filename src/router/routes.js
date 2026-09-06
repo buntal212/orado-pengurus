@@ -6,23 +6,27 @@ const routes = [
     children: [
       {
         path: '',
-        component: () => import('@/pages/IndexPage.vue'),
+        component: () => import('@/pages/Dashboard/IndexPage.vue'),
       },
       {
         path: 'jabatan',
-        component: () => import('@/pages/JabatanPage.vue'),
+        component: () => import('@/pages/Jabatan/IndexPage.vue'),
       },
       {
         path: 'anggota',
-        component: () => import('@/pages/AnggotaPage.vue'),
+        component: () => import('@/pages/Anggota/IndexPage.vue'),
       },
       {
         path: 'club',
-        component: () => import('@/pages/ClubPage.vue'),
+        component: () => import('@/pages/Club/IndexPage.vue'),
       },
       {
         path: 'verifikasi-pengajuan',
-        component: () => import('@/pages/VerifikasiPengajuanPage.vue'),
+        component: () => import('@/pages/VerifikasiPengajuan/IndexPage.vue'),
+      },
+      {
+        path: 'pengaturan',
+        component: () => import('@/pages/Pengaturan/IndexPage.vue'),
       },
     ],
   },
@@ -33,7 +37,7 @@ const routes = [
   },
   {
     path: '/verifikasi-anggota',
-    component: () => import('@/pages/VerifikasiAnggotaPage.vue'),
+    component: () => import('@/pages/VerifikasiAnggota/IndexPage.vue'),
     meta: { guestOnly: true },
   },
 

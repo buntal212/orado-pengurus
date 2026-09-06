@@ -11,7 +11,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['axios', 'pwa', 'idle-session'],
+    boot: ['axios', 'firebase', 'pwa', 'idle-session'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -175,12 +175,7 @@ export default defineConfig((ctx) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      extendPWAGenerateSWOptions(options) {
-        options.skipWaiting = true
-        options.clientsClaim = true
-        options.cleanupOutdatedCaches = true
-      },
+      workboxMode: 'InjectManifest', // Firebase background messaging memakai service worker Quasar yang sama.
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',
       // extendPWAManifestJson (json) {},
