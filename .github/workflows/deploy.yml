@@ -28,6 +28,12 @@ jobs:
           echo 'VITE_APP_NAME="Orado Pengurus"' > .env.production
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env.production
 
+      - name: Check production env
+        run: |
+          echo "=== .env.production ==="
+          cat .env.production
+          echo "======================="
+
       - name: Build Quasar PWA
         run: npm run build
 
