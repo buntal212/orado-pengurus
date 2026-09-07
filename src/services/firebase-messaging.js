@@ -34,10 +34,25 @@ async function getFirebaseServiceWorkerRegistration() {
     throw new Error('Service worker belum didukung browser ini.')
   }
 
+  let registration = await navigator.serviceWorker.getRegistration()
+  if (!registration) {
+    registration = await withTimeout(
+      navigator.serviceWorker.register('/sw.js'),
+      15000,
+      'Service worker ORADO tidak dapat dipasang. Periksa koneksi internet lalu coba lagi.',
+    )
+  }
+
+  await withTimeout(
+    registration.update(),
+    15000,
+    'Pembaruan service worker ORADO terlalu lama. Periksa koneksi internet lalu coba lagi.',
+  )
+
   return withTimeout(
     navigator.serviceWorker.ready,
-    10000,
-    'Service worker belum aktif. Buka aplikasi ORADO PROBOLINGGO dari layar utama atau gunakan mode PWA.',
+    30000,
+    'Service worker ORADO belum siap. Tutup aplikasi, buka kembali, lalu coba aktifkan notifikasi sekali lagi.',
   )
 }
 
