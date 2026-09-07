@@ -147,6 +147,17 @@ export async function refreshPushNotificationToken() {
   }
 }
 
+export async function testPushNotification() {
+  try {
+    const response = await api.post('/fcm/test')
+
+    return { success: true, message: response.data?.message }
+  } catch (error) {
+    console.error('[FCM] pengujian gagal:', error)
+    return { success: false, message: getErrorMessage(error) }
+  }
+}
+
 export async function removePushNotificationToken() {
   try {
     if (!messaging || !('Notification' in window) || Notification.permission !== 'granted') {

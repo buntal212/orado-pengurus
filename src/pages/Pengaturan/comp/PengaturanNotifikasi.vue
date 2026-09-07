@@ -17,6 +17,18 @@
       class="activate-button"
       @click="aktifkanNotifikasi"
     />
+    <q-btn
+      v-if="pushAktif"
+      outline
+      no-caps
+      color="primary"
+      icon="send"
+      :loading="store.loadingTestNotification"
+      :disable="store.loadingNotification || store.loadingTestNotification"
+      label="Uji notifikasi"
+      class="test-button"
+      @click="ujiNotifikasi"
+    />
   </section>
 </template>
 <script setup>
@@ -38,6 +50,14 @@ async function aktifkanNotifikasi() {
     Notify.create({ type: 'positive', message: 'Notifikasi berhasil diaktifkan.' })
   } else
     Notify.create({ type: 'negative', message: result.message || 'Gagal mengaktifkan notifikasi' })
+}
+
+async function ujiNotifikasi() {
+  const result = await store.ujiNotifikasi()
+  Notify.create({
+    type: result.success ? 'positive' : 'negative',
+    message: result.message || 'Notifikasi uji belum dapat dikirim.',
+  })
 }
 </script>
 <style scoped>
@@ -77,5 +97,10 @@ async function aktifkanNotifikasi() {
 .activate-button {
   width: 100%;
   min-height: 42px;
+}
+.test-button {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
 }
 </style>
