@@ -112,6 +112,12 @@ async function applyUpdate() {
 
 function showUpdate(event) {
   updateRegistration.value = event.detail?.registration || null
+  const worker = updateRegistration.value?.waiting
+  if (worker) {
+    worker.postMessage({ type: 'SKIP_WAITING' })
+    return
+  }
+
   updateDialog.value = true
 }
 
