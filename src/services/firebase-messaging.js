@@ -4,6 +4,7 @@ import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
 
 const PUSH_ACTIVATED_KEY = 'orado_pengurus_push_activated'
+const DEVICE_INSTALLATION_ID_KEY = 'orado_pengurus_device_installation_id'
 const PWA_SERVICE_WORKER_FILE = `${import.meta.env.QUASAR_SERVICE_WORKER_FILE || '/sw.js'}?v=${encodeURIComponent(
   import.meta.env.VITE_PWA_VERSION || 'current',
 )}`
@@ -186,7 +187,7 @@ export function pushNotificationSudahAktif() {
   return localStorage.getItem(PUSH_ACTIVATED_KEY) === '1'
 }
 
-function getDeviceName() {
+export function getDeviceName() {
   const userAgent = navigator.userAgent
 
   const browser = /Edg\//.test(userAgent)
@@ -213,7 +214,18 @@ function getDeviceName() {
             ? 'Linux'
             : 'Perangkat'
 
-  return `${browser} - ${platform}`.slice(0, 255)
+  return `${browser} - ${platform} (${getDeviceInstallationId()})`.slice(0, 255)
+}
+
+function getDeviceInstallationId() {
+  let installationId = localStorage.getItem(DEVICE_INSTALLATION_ID_KEY)
+
+  if (!installationId) {
+    installationId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`
+    localStorage.setItem(DEVICE_INSTALLATION_ID_KEY, installationId)
+  }
+
+  return installationId.slice(0, 8)
 }
 
 function getErrorMessage(error) {
