@@ -34,20 +34,14 @@ async function getFirebaseServiceWorkerRegistration() {
     throw new Error('Service worker belum didukung browser ini.')
   }
 
-  let registration = await navigator.serviceWorker.getRegistration()
+  const registration = await navigator.serviceWorker.getRegistration()
   if (!registration) {
-    registration = await withTimeout(
+    await withTimeout(
       navigator.serviceWorker.register('/sw.js'),
       15000,
       'Service worker ORADO tidak dapat dipasang. Periksa koneksi internet lalu coba lagi.',
     )
   }
-
-  await withTimeout(
-    registration.update(),
-    15000,
-    'Pembaruan service worker ORADO terlalu lama. Periksa koneksi internet lalu coba lagi.',
-  )
 
   return withTimeout(
     navigator.serviceWorker.ready,
