@@ -38,10 +38,8 @@ try {
   firebase.messaging().onBackgroundMessage((payload) => {
     console.log('[ORADO SW] Background message:', payload)
 
-    if (payload.notification) return
-
-    const title = payload.data?.title || 'ORADO PROBOLINGGO'
-    const body = payload.data?.body || ''
+    const title = payload.notification?.title || payload.data?.title || 'ORADO PROBOLINGGO'
+    const body = payload.notification?.body || payload.data?.body || ''
 
     return self.registration.showNotification(title, {
       body,
