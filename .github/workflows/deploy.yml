@@ -26,6 +26,7 @@ jobs:
       - name: Create production env
         run: |
           echo 'VITE_APP_NAME="Orado Pengurus"' > .env.production
+          echo "VITE_PWA_VERSION=${{ github.sha }}" >> .env.production
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env.production
           echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env.production
           echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env.production

@@ -4,7 +4,9 @@ import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
 
 const PUSH_ACTIVATED_KEY = 'orado_pengurus_push_activated'
-const PWA_SERVICE_WORKER_FILE = import.meta.env.QUASAR_SERVICE_WORKER_FILE || '/sw.js'
+const PWA_SERVICE_WORKER_FILE = `${import.meta.env.QUASAR_SERVICE_WORKER_FILE || '/sw.js'}?v=${encodeURIComponent(
+  import.meta.env.VITE_PWA_VERSION || 'current',
+)}`
 
 async function simpanTokenPush() {
   const registration = await getFirebaseServiceWorkerRegistration()

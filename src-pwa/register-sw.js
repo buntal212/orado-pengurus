@@ -2,6 +2,9 @@ import { register } from 'register-service-worker'
 
 let announcedWorker = null
 let reloading = false
+const serviceWorkerFile = `${import.meta.env.QUASAR_SERVICE_WORKER_FILE}?v=${encodeURIComponent(
+  import.meta.env.VITE_PWA_VERSION || 'current',
+)}`
 
 function announceUpdate(registration) {
   if (!registration.waiting || registration.waiting === announcedWorker) return
@@ -17,7 +20,7 @@ if ('serviceWorker' in navigator) {
   })
 }
 
-register(import.meta.env.QUASAR_SERVICE_WORKER_FILE, {
+register(serviceWorkerFile, {
   registrationOptions: { updateViaCache: 'none' },
   registered(registration) {
     console.log('[PWA] service worker terdaftar:', registration.scope)
