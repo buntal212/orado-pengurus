@@ -63,6 +63,12 @@ function withTimeout(promise, timeout, message) {
 
 export async function enablePushNotification() {
   try {
+    if (!window.isSecureContext) {
+      throw new Error(
+        'Notifikasi Android memerlukan alamat HTTPS. Buka ORADO PROBOLINGGO dari domain produksi, bukan alamat IP atau HTTP lokal.',
+      )
+    }
+
     if (!('Notification' in window)) {
       throw new Error('Browser ini tidak mendukung notifikasi.')
     }
