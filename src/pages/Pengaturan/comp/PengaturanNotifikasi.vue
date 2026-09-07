@@ -23,17 +23,18 @@
 import { computed, ref } from 'vue'
 import { Notify } from 'quasar'
 import { usePengaturanStore } from '@/stores/pengaturan'
+import { pushNotificationSudahAktif } from '@/services/firebase-messaging'
 
 const store = usePengaturanStore()
-const permission = ref(typeof Notification === 'undefined' ? 'default' : Notification.permission)
+const pushAktif = ref(pushNotificationSudahAktif())
 const notificationLabel = computed(() =>
-  permission.value === 'granted' ? 'Notifikasi sudah diizinkan' : 'Aktifkan notifikasi',
+  pushAktif.value ? 'Notifikasi sudah aktif' : 'Aktifkan notifikasi',
 )
 
 async function aktifkanNotifikasi() {
   const result = await store.aktifkanNotifikasi()
-  permission.value = typeof Notification === 'undefined' ? 'default' : Notification.permission
   if (result.success) {
+    pushAktif.value = true
     Notify.create({ type: 'positive', message: 'Notifikasi berhasil diaktifkan.' })
   } else
     Notify.create({ type: 'negative', message: result.message || 'Gagal mengaktifkan notifikasi' })

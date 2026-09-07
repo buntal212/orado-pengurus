@@ -20,6 +20,7 @@ if ('serviceWorker' in navigator) {
 register(import.meta.env.QUASAR_SERVICE_WORKER_FILE, {
   registrationOptions: { updateViaCache: 'none' },
   registered(registration) {
+    console.log('[PWA] service worker terdaftar:', registration.scope)
     registration.update().then(() => announceUpdate(registration)).catch(() => {})
     window.setInterval(() => {
       if (navigator.onLine) registration.update()
@@ -32,6 +33,6 @@ register(import.meta.env.QUASAR_SERVICE_WORKER_FILE, {
     announceUpdate(registration)
   },
   error(error) {
-    console.error('Service worker ORADO gagal didaftarkan:', error)
+    console.error('[PWA] service worker ORADO gagal didaftarkan:', error)
   },
 })

@@ -3,8 +3,14 @@ import { getToken } from 'firebase/messaging'
 import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
 
+const PUSH_ACTIVATED_KEY = 'orado_pengurus_push_activated'
+
 async function simpanTokenPush() {
   const registration = await getFirebaseServiceWorkerRegistration()
+  console.log('[FCM] service worker siap:', {
+    scope: registration.scope,
+    state: registration.active?.state,
+  })
   const token = await withTimeout(
     getToken(messaging, {
       vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
@@ -17,8 +23,10 @@ async function simpanTokenPush() {
   if (!token) {
     throw new Error('FCM token tidak berhasil dibuat.')
   }
+  console.log('[FCM] token tersedia:', Boolean(token))
 
-  await withTimeout(
+  console.log('[FCM] mengirim token ke backend...')
+  const response = await withTimeout(
     api.post('/fcm/token', {
       token,
       app_type: 'pengurus',
@@ -27,6 +35,8 @@ async function simpanTokenPush() {
     15000,
     'Penyimpanan token notifikasi terlalu lama. Silakan coba lagi.',
   )
+  console.log('[FCM] respons backend:', response.status)
+  localStorage.setItem(PUSH_ACTIVATED_KEY, '1')
 }
 
 async function getFirebaseServiceWorkerRegistration() {
@@ -34,20 +44,26 @@ async function getFirebaseServiceWorkerRegistration() {
     throw new Error('Service worker belum didukung browser ini.')
   }
 
-  const registration = await navigator.serviceWorker.getRegistration()
-  if (!registration) {
-    await withTimeout(
-      navigator.serviceWorker.register('/sw.js'),
-      15000,
-      'Service worker ORADO tidak dapat dipasang. Periksa koneksi internet lalu coba lagi.',
-    )
+  const existingRegistration = await navigator.serviceWorker.getRegistration()
+  console.log('[FCM] service worker terdaftar:', existingRegistration
+    ? { scope: existingRegistration.scope, state: existingRegistration.active?.state }
+    : null)
+
+  if (!existingRegistration) {
+    throw new Error('Service worker PWA belum terdaftar. Muat ulang aplikasi setelah pembaruan selesai, lalu coba lagi.')
   }
 
-  return withTimeout(
+  const registration = await withTimeout(
     navigator.serviceWorker.ready,
     30000,
-    'Service worker ORADO belum siap. Tutup aplikasi, buka kembali, lalu coba aktifkan notifikasi sekali lagi.',
+    'Service worker ORADO belum siap. Periksa status sw.js pada server atau lihat log diagnostik browser.',
   )
+
+  if (!registration.active) {
+    throw new Error('Service worker ORADO belum aktif.')
+  }
+
+  return registration
 }
 
 function withTimeout(promise, timeout, message) {
@@ -82,6 +98,7 @@ export async function enablePushNotification() {
     }
 
     const permission = await Notification.requestPermission()
+    console.log('[FCM] permission:', permission)
 
     if (permission !== 'granted') {
       throw new Error('Izin notifikasi belum diberikan.')
@@ -93,7 +110,8 @@ export async function enablePushNotification() {
       success: true,
     }
   } catch (error) {
-    console.error('[ORADO FCM]', error)
+    console.error('[FCM] aktivasi gagal:', error)
+    console.error('[FCM] respons backend:', error?.response?.data)
 
     return {
       success: false,
@@ -133,10 +151,15 @@ export async function removePushNotificationToken() {
       await api.delete('/fcm/token', {
         data: { token },
       })
+      localStorage.removeItem(PUSH_ACTIVATED_KEY)
     }
   } catch (error) {
     console.warn('[ORADO FCM] Gagal menghapus token:', error)
   }
+}
+
+export function pushNotificationSudahAktif() {
+  return localStorage.getItem(PUSH_ACTIVATED_KEY) === '1'
 }
 
 function getDeviceName() {
