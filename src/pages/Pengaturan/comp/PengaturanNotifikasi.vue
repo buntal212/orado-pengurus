@@ -18,7 +18,6 @@
       @click="aktifkanNotifikasi"
     />
     <q-btn
-      v-if="pushAktif"
       outline
       no-caps
       color="primary"

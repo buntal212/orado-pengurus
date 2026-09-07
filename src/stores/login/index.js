@@ -25,7 +25,7 @@ export const useLoginStore = defineStore('login', {
         const response = await api.post('/v1/auth/login', {
           login: this.form.email,
           password: this.form.password,
-          device_name: 'orado-pengurus',
+          device_name: getLoginDeviceName(),
         })
         const data = response.data?.data
         // Sesi login pengurus disimpan persisten agar router guard tetap mengenali user.
@@ -87,3 +87,27 @@ export const useLoginStore = defineStore('login', {
     },
   },
 })
+
+function getLoginDeviceName() {
+  const userAgent = navigator.userAgent
+  const browser = /Edg\//.test(userAgent)
+    ? 'Edge'
+    : /CriOS\//.test(userAgent) || /Chrome\//.test(userAgent)
+      ? 'Chrome'
+      : /Firefox\//.test(userAgent)
+        ? 'Firefox'
+        : /Safari\//.test(userAgent)
+          ? 'Safari'
+          : 'Browser'
+  const platform = /Android/.test(userAgent)
+    ? 'Android'
+    : /Windows/.test(userAgent)
+      ? 'Windows'
+      : /iPhone|iPad|iPod/.test(userAgent)
+        ? 'iPhone'
+        : /Mac OS/.test(userAgent)
+          ? 'macOS'
+          : 'Perangkat'
+
+  return `${browser} - ${platform}`.slice(0, 255)
+}
