@@ -91,3 +91,12 @@ jobs:
             -e "ssh -i ~/.ssh/id_ed25519" \
             dist/pwa/ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/www/wwwroot/pengurusapp.orado-kota-probolinggo.my.id/"
+
+      - name: Verify PWA service worker production
+        run: |
+          response_headers="$(curl --fail --silent --show-error --location --retry 3 --head https://pengurusapp.orado-kota-probolinggo.my.id/sw.js)"
+          echo "$response_headers"
+          echo "$response_headers" | grep -qiE '^content-type: (application|text)/javascript' || {
+            echo 'ERROR: sw.js harus dilayani sebagai JavaScript agar PWA dan FCM Android dapat aktif.'
+            exit 1
+          }
