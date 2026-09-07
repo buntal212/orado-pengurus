@@ -149,7 +149,21 @@ export async function refreshPushNotificationToken() {
 
 export async function testPushNotification() {
   try {
-    const response = await api.post('/fcm/test')
+    if (!messaging || Notification.permission !== 'granted') {
+      throw new Error('Aktifkan notifikasi pada perangkat ini terlebih dahulu.')
+    }
+
+    const registration = await getFirebaseServiceWorkerRegistration()
+    const token = await getToken(messaging, {
+      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    })
+
+    if (!token) {
+      throw new Error('Token notifikasi perangkat ini belum tersedia.')
+    }
+
+    const response = await api.post('/fcm/test', { token })
 
     return { success: true, message: response.data?.message }
   } catch (error) {
