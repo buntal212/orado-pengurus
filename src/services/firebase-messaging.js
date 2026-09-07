@@ -4,6 +4,7 @@ import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
 
 const PUSH_ACTIVATED_KEY = 'orado_pengurus_push_activated'
+const PWA_SERVICE_WORKER_FILE = import.meta.env.QUASAR_SERVICE_WORKER_FILE || '/sw.js'
 
 async function simpanTokenPush() {
   const registration = await getFirebaseServiceWorkerRegistration()
@@ -44,26 +45,34 @@ async function getFirebaseServiceWorkerRegistration() {
     throw new Error('Service worker belum didukung browser ini.')
   }
 
-  const existingRegistration = await navigator.serviceWorker.getRegistration()
-  console.log('[FCM] service worker terdaftar:', existingRegistration
+  let registration = await navigator.serviceWorker.getRegistration()
+  console.log('[FCM] service worker terdaftar:', registration
     ? { scope: existingRegistration.scope, state: existingRegistration.active?.state }
     : null)
 
-  if (!existingRegistration) {
-    throw new Error('Service worker PWA belum terdaftar. Muat ulang aplikasi setelah pembaruan selesai, lalu coba lagi.')
+  if (!registration) {
+    try {
+      registration = await navigator.serviceWorker.register(PWA_SERVICE_WORKER_FILE, {
+        updateViaCache: 'none',
+      })
+      console.log('[FCM] service worker PWA didaftarkan ulang:', registration.scope)
+    } catch (error) {
+      console.error('[FCM] pendaftaran service worker gagal:', error)
+      throw new Error(`Service worker PWA gagal didaftarkan: ${error.message}`)
+    }
   }
 
-  const registration = await withTimeout(
+  const readyRegistration = await withTimeout(
     navigator.serviceWorker.ready,
     30000,
     'Service worker ORADO belum siap. Periksa status sw.js pada server atau lihat log diagnostik browser.',
   )
 
-  if (!registration.active) {
+  if (!readyRegistration.active) {
     throw new Error('Service worker ORADO belum aktif.')
   }
 
-  return registration
+  return readyRegistration
 }
 
 function withTimeout(promise, timeout, message) {
