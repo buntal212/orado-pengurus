@@ -5,20 +5,28 @@ import { api } from '@/boot/axios'
 
 async function simpanTokenPush() {
   const registration = await getFirebaseServiceWorkerRegistration()
-  const token = await getToken(messaging, {
-    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-    serviceWorkerRegistration: registration,
-  })
+  const token = await withTimeout(
+    getToken(messaging, {
+      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    }),
+    15000,
+    'Pembuatan token notifikasi terlalu lama. Pastikan aplikasi dibuka sebagai PWA dan koneksi internet aktif.',
+  )
 
   if (!token) {
     throw new Error('FCM token tidak berhasil dibuat.')
   }
 
-  await api.post('/fcm/token', {
-    token,
-    app_type: 'pengurus',
-    device_name: getDeviceName(),
-  })
+  await withTimeout(
+    api.post('/fcm/token', {
+      token,
+      app_type: 'pengurus',
+      device_name: getDeviceName(),
+    }),
+    15000,
+    'Penyimpanan token notifikasi terlalu lama. Silakan coba lagi.',
+  )
 }
 
 async function getFirebaseServiceWorkerRegistration() {
@@ -26,7 +34,22 @@ async function getFirebaseServiceWorkerRegistration() {
     throw new Error('Service worker belum didukung browser ini.')
   }
 
-  return navigator.serviceWorker.ready
+  return withTimeout(
+    navigator.serviceWorker.ready,
+    10000,
+    'Service worker belum aktif. Buka aplikasi ORADO PROBOLINGGO dari layar utama atau gunakan mode PWA.',
+  )
+}
+
+function withTimeout(promise, timeout, message) {
+  let timer
+
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = window.setTimeout(() => reject(new Error(message)), timeout)
+    }),
+  ]).finally(() => window.clearTimeout(timer))
 }
 
 export async function enablePushNotification() {
