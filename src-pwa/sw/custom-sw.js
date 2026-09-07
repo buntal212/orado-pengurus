@@ -22,44 +22,37 @@ cleanupOutdatedCaches()
  * Firebase Cloud Messaging
  * Pakai compat SDK supaya stabil di custom service worker.
  */
-importScripts('https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js')
-importScripts('https://www.gstatic.com/firebasejs/12.18.0/firebase-messaging-compat.js')
+try {
+  importScripts('https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js')
+  importScripts('https://www.gstatic.com/firebasejs/12.18.0/firebase-messaging-compat.js')
 
-firebase.initializeApp({
-  apiKey: 'AIzaSyBfUnHqeKtNWMl9QZ-W6iNGFmJznhvTfGM',
-  authDomain: 'orado-99dd1.firebaseapp.com',
-  projectId: 'orado-99dd1',
-  storageBucket: 'orado-99dd1.firebasestorage.app',
-  messagingSenderId: '497115988745',
-  appId: '1:497115988745:web:1a761e066ae745683e89d8',
-})
-
-const messaging = firebase.messaging()
-
-messaging.onBackgroundMessage((payload) => {
-  console.log('[ORADO SW] Background message:', payload)
-
-  /*
-   * Kalau payload dari backend sudah membawa notification,
-   * browser/Firebase bisa menampilkan notifikasi sendiri.
-   * Jadi kita hanya showNotification manual untuk data-only message.
-   */
-  if (payload.notification) {
-    return
-  }
-
-  const title = payload.data?.title || 'ORADO PROBOLINGGO'
-  const body = payload.data?.body || ''
-
-  return self.registration.showNotification(title, {
-    body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-128x128.png',
-    data: {
-      target: '/notifikasi',
-    },
+  firebase.initializeApp({
+    apiKey: 'AIzaSyBfUnHqeKtNWMl9QZ-W6iNGFmJznhvTfGM',
+    authDomain: 'orado-99dd1.firebaseapp.com',
+    projectId: 'orado-99dd1',
+    storageBucket: 'orado-99dd1.firebasestorage.app',
+    messagingSenderId: '497115988745',
+    appId: '1:497115988745:web:1a761e066ae745683e89d8',
   })
-})
+
+  firebase.messaging().onBackgroundMessage((payload) => {
+    console.log('[ORADO SW] Background message:', payload)
+
+    if (payload.notification) return
+
+    const title = payload.data?.title || 'ORADO PROBOLINGGO'
+    const body = payload.data?.body || ''
+
+    return self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-128x128.png',
+      data: { target: '/notifikasi' },
+    })
+  })
+} catch (error) {
+  console.error('[ORADO SW] Firebase Messaging belum dapat dimuat.', error)
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
