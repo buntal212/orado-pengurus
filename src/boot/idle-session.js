@@ -20,7 +20,7 @@ export default boot(({ router, store }) => {
     if (isLoggingOut || !hasToken()) return
     isLoggingOut = true
     const loginStore = useLoginStore(store)
-    await loginStore.logout()
+    await loginStore.logout({ removePushToken: false })
     Notify.create({
       type: 'warning',
       message: 'Anda keluar otomatis karena tidak ada aktivitas selama 15 menit.',

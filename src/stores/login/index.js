@@ -62,11 +62,13 @@ export const useLoginStore = defineStore('login', {
       }
     },
 
-    async logout() {
+    async logout({ removePushToken = true } = {}) {
       this.loading = true
 
       try {
-        await removePushNotificationToken()
+        if (removePushToken) {
+          await removePushNotificationToken()
+        }
         await api.post('/v1/auth/logout')
       } catch (error) {
         console.error(error)
