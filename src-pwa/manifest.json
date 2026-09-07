@@ -1,6 +1,6 @@
 {
-  "name": "Orado App",
-  "short_name": "Orado App",
+  "name": "ORADO PROBOLINGGO",
+  "short_name": "ORADO PROBOLINGGO",
   "orientation": "portrait",
   "background_color": "#002451",
   "theme_color": "#002451",
@@ -26,14 +26,14 @@
       "sizes": "1672x941",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Dashboard ORADO Pengurus"
+      "label": "Dashboard ORADO PROBOLINGGO"
     },
     {
       "src": "screenshots/orado-pengurus-mobile.png",
       "sizes": "941x1672",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Aplikasi ORADO Pengurus"
+      "label": "Aplikasi ORADO PROBOLINGGO"
     }
   ]
 }

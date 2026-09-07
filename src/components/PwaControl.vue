@@ -3,7 +3,7 @@
     <q-card class="install-card">
       <q-card-section class="install-head text-center">
         <div class="install-logo"><img src="@/assets/orado/logo-white.svg" alt="ORADO" /></div>
-        <div class="text-subtitle1 text-weight-bold q-mt-sm">Instal ORADO Pengurus</div>
+        <div class="text-subtitle1 text-weight-bold q-mt-sm">Instal ORADO PROBOLINGGO</div>
         <div class="text-caption text-blue-grey-7 q-mt-xs">
           Akses cepat dari layar utama perangkat Anda.
         </div>

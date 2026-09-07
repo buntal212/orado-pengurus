@@ -106,6 +106,7 @@ const menus = [
   { title: 'Data\nAnggota', icon: 'groups', to: '/anggota' },
   { title: 'Data Club', icon: 'admin_panel_settings', to: '/club' },
   { title: 'Data Event', icon: 'event', to: '/event' },
+  { title: 'Data Peserta\nEvent', icon: 'groups', to: '/event-peserta' },
   { title: 'Keuangan', icon: 'account_balance_wallet' },
   { title: 'Pemasukan', icon: 'south' },
   { title: 'Pengeluaran', icon: 'north' },

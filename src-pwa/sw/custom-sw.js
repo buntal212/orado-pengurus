@@ -48,7 +48,7 @@ messaging.onBackgroundMessage((payload) => {
     return
   }
 
-  const title = payload.data?.title || 'ORADO Pengurus'
+  const title = payload.data?.title || 'ORADO PROBOLINGGO'
   const body = payload.data?.body || ''
 
   return self.registration.showNotification(title, {
@@ -56,7 +56,7 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-128x128.png',
     data: {
-      target: payload.data?.url || payload.data?.route || '/',
+      target: '/notifikasi',
     },
   })
 })

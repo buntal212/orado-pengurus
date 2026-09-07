@@ -25,6 +25,14 @@ const routes = [
         component: () => import('@/pages/Event/IndexPage.vue'),
       },
       {
+        path: 'event-peserta',
+        component: () => import('@/pages/EventPeserta/IndexPage.vue'),
+      },
+      {
+        path: 'notifikasi',
+        component: () => import('@/pages/Notifikasi/IndexPage.vue'),
+      },
+      {
         path: 'verifikasi-pengajuan',
         component: () => import('@/pages/VerifikasiPengajuan/IndexPage.vue'),
       },

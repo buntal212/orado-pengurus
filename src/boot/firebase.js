@@ -2,6 +2,7 @@ import { boot } from 'quasar/wrappers'
 import { initializeApp } from 'firebase/app'
 import { getMessaging, isSupported, onMessage } from 'firebase/messaging'
 import { Notify } from 'quasar'
+import { useNotifikasiStore } from '@/stores/notifikasi'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,13 +17,20 @@ const firebaseApp = initializeApp(firebaseConfig)
 
 let messaging = null
 
-export default boot(async () => {
+export default boot(async ({ store }) => {
   if (await isSupported()) {
     messaging = getMessaging(firebaseApp)
     onMessage(messaging, (payload) => {
-      const title = payload.notification?.title || 'ORADO Pengurus'
-      const body = payload.notification?.body || 'Ada notifikasi baru.'
+      const title = payload.notification?.title || payload.data?.title || 'ORADO PROBOLINGGO'
+      const body = payload.notification?.body || payload.data?.body || 'Ada notifikasi baru.'
       const target = internalPath(payload.data?.url || payload.data?.route)
+      useNotifikasiStore(store).tambah({
+        title,
+        body,
+        url: target,
+        menuLabel: payload.data?.menu_label || null,
+        serverId: payload.data?.notification_id || null,
+      })
 
       Notify.create({
         type: 'info',
