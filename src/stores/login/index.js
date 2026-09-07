@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from '@/boot/axios'
-import { removePushNotificationToken } from '@/services/firebase-messaging'
+import {
+  refreshPushNotificationToken,
+  removePushNotificationToken,
+} from '@/services/firebase-messaging'
 
 export const useLoginStore = defineStore('login', {
   state: () => ({
@@ -31,6 +34,7 @@ export const useLoginStore = defineStore('login', {
         window.localStorage.setItem('orado_pengurus_user', JSON.stringify(data.user))
         this.user = data.user
         this.form.password = ''
+        void refreshPushNotificationToken()
         Notify.create({ type: 'positive', message: response.data?.message || 'Login berhasil.' })
         return true
       } catch (error) {

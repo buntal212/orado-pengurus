@@ -3,6 +3,24 @@ import { getToken } from 'firebase/messaging'
 import { messaging } from '@/boot/firebase'
 import { api } from '@/boot/axios'
 
+async function simpanTokenPush() {
+  const registration = await getFirebaseServiceWorkerRegistration()
+  const token = await getToken(messaging, {
+    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+    serviceWorkerRegistration: registration,
+  })
+
+  if (!token) {
+    throw new Error('FCM token tidak berhasil dibuat.')
+  }
+
+  await api.post('/fcm/token', {
+    token,
+    app_type: 'pengurus',
+    device_name: getDeviceName(),
+  })
+}
+
 async function getFirebaseServiceWorkerRegistration() {
   if (!('serviceWorker' in navigator)) {
     throw new Error('Service worker belum didukung browser ini.')
@@ -31,22 +49,7 @@ export async function enablePushNotification() {
       throw new Error('Izin notifikasi belum diberikan.')
     }
 
-    const registration = await getFirebaseServiceWorkerRegistration()
-
-    const token = await getToken(messaging, {
-      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    })
-
-    if (!token) {
-      throw new Error('FCM token tidak berhasil dibuat.')
-    }
-
-    await api.post('/fcm/token', {
-      token,
-      app_type: 'pengurus',
-      device_name: getDeviceName(),
-    })
+    await simpanTokenPush()
 
     return {
       success: true,
@@ -58,6 +61,20 @@ export async function enablePushNotification() {
       success: false,
       message: getErrorMessage(error),
     }
+  }
+}
+
+export async function refreshPushNotificationToken() {
+  if (!messaging || !('Notification' in window) || Notification.permission !== 'granted') {
+    return false
+  }
+
+  try {
+    await simpanTokenPush()
+    return true
+  } catch (error) {
+    console.warn('[ORADO FCM] Gagal memperbarui token:', error)
+    return false
   }
 }
 

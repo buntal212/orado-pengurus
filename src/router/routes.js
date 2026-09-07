@@ -21,6 +21,10 @@ const routes = [
         component: () => import('@/pages/Club/IndexPage.vue'),
       },
       {
+        path: 'event',
+        component: () => import('@/pages/Event/IndexPage.vue'),
+      },
+      {
         path: 'verifikasi-pengajuan',
         component: () => import('@/pages/VerifikasiPengajuan/IndexPage.vue'),
       },
