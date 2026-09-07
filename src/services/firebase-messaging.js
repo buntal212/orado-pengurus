@@ -47,7 +47,7 @@ async function getFirebaseServiceWorkerRegistration() {
 
   let registration = await navigator.serviceWorker.getRegistration()
   console.log('[FCM] service worker terdaftar:', registration
-    ? { scope: existingRegistration.scope, state: existingRegistration.active?.state }
+    ? { scope: registration.scope, state: registration.active?.state }
     : null)
 
   if (!registration) {
@@ -55,10 +55,12 @@ async function getFirebaseServiceWorkerRegistration() {
       registration = await navigator.serviceWorker.register(PWA_SERVICE_WORKER_FILE, {
         updateViaCache: 'none',
       })
-      console.log('[FCM] service worker PWA didaftarkan ulang:', registration.scope)
+      console.log('[FCM] service worker PWA didaftarkan:', registration.scope)
     } catch (error) {
       console.error('[FCM] pendaftaran service worker gagal:', error)
-      throw new Error(`Service worker PWA gagal didaftarkan: ${error.message}`)
+      throw new Error(`Service worker PWA gagal didaftarkan: ${error.message}`, {
+        cause: error,
+      })
     }
   }
 
