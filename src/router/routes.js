@@ -33,6 +33,10 @@ const routes = [
         component: () => import('@/pages/Notifikasi/IndexPage.vue'),
       },
       {
+        path: 'pengumuman',
+        component: () => import('@/pages/Pengumuman/IndexPage.vue'),
+      },
+      {
         path: 'verifikasi-pengajuan',
         component: () => import('@/pages/VerifikasiPengajuan/IndexPage.vue'),
       },

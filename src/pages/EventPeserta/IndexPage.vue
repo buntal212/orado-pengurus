@@ -6,7 +6,14 @@
           <span>DATA PESERTA EVENT</span>
           <p>Daftar tim dan atlet yang telah melakukan pendaftaran.</p>
         </div>
-        <q-btn round flat icon="arrow_back" color="primary" aria-label="Kembali" @click="router.push('/')" />
+        <q-btn
+          round
+          flat
+          icon="arrow_back"
+          color="primary"
+          aria-label="Kembali"
+          @click="router.push('/')"
+        />
       </div>
 
       <section class="list-card">
@@ -28,10 +35,17 @@
               <span class="registration-code">{{ item.kode_pendaftaran }}</span>
               <span>{{ item.event?.nama_event }}</span>
               <div v-for="detail in item.rincis" :key="detail.id" class="athletes">
-                <span><q-icon name="person" /> {{ detail.nama_atlet_satu }} &amp; {{ detail.nama_atlet_dua }}</span>
+                <span
+                  ><q-icon name="person" /> {{ detail.nama_atlet_satu }} &amp;
+                  {{ detail.nama_atlet_dua }}</span
+                >
               </div>
             </div>
-            <q-badge color="blue-1" text-color="primary" :label="labelStatus(item.status_pendaftaran)" />
+            <q-badge
+              color="blue-1"
+              text-color="primary"
+              :label="labelStatus(item.status_pendaftaran)"
+            />
           </div>
           <q-btn
             flat
@@ -44,7 +58,11 @@
           />
           <q-slide-transition>
             <section v-show="expandedId === item.id" class="detail-panel">
-              <div v-for="detail in item.rincis" :key="`detail-${detail.id}`" class="athlete-detail-grid">
+              <div
+                v-for="detail in item.rincis"
+                :key="`detail-${detail.id}`"
+                class="athlete-detail-grid"
+              >
                 <div class="athlete-detail">
                   <div class="athlete-title"><q-icon name="looks_one" /> Atlet 1</div>
                   <strong>{{ detail.nama_atlet_satu }}</strong>
@@ -70,10 +88,14 @@
 
         <q-infinite-scroll :offset="120" @load="loadMore">
           <template #loading>
-            <div class="row justify-center q-pa-md"><q-spinner-dots color="primary" size="26px" /></div>
+            <div class="row justify-center q-pa-md">
+              <q-spinner-dots color="primary" size="26px" />
+            </div>
           </template>
         </q-infinite-scroll>
-        <div v-if="!store.loading && !store.items.length" class="empty-state">Belum ada peserta event.</div>
+        <div v-if="!store.loading && !store.items.length" class="empty-state">
+          Belum ada peserta event.
+        </div>
       </section>
     </main>
   </q-page>
@@ -81,15 +103,25 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { usePesertaEventStore } from '@/stores/peserta-event'
 
 const router = useRouter()
+const route = useRoute()
 const store = usePesertaEventStore()
 let timer
 const expandedId = ref(null)
+const searchDariNotifikasi = String(route.query.search || '').trim()
 
-onMounted(() => store.getData({ reset: true }))
+// Infinite scroll dapat memulai request sebelum onMounted. Isi filter lebih awal
+// agar request pertama langsung memakai nomor registrasi dari notifikasi.
+store.params.search = searchDariNotifikasi
+
+onMounted(async () => {
+  await store.getData({ reset: true })
+
+  if (searchDariNotifikasi && store.items.length === 1) expandedId.value = store.items[0].id
+})
 
 function cari() {
   window.clearTimeout(timer)
@@ -141,35 +173,147 @@ async function loadMore(index, done) {
   padding: 20px 14px 40px;
   background: #f5f7fb;
 }
-.participant-content { max-width: 720px; margin: auto; }
-.page-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 17px; }
-.page-heading span { color: #0753b6; font-size: 11px; font-weight: 800; letter-spacing: 0.6px; }
-.page-heading p { margin: 4px 0 0; color: #74859b; font-size: 13px; }
-.list-card { overflow: hidden; border: 1px solid #e2eaf2; border-radius: 12px; background: #fff; box-shadow: 0 4px 18px #173b6e0a; }
-.list-card > .q-input { margin: 13px; }
-.participant-card { border-top: 1px solid #edf1f5; }
-.participant-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 11px; padding: 14px 14px 7px; }
-.participant-copy { min-width: 0; }
-.participant-copy strong, .participant-copy > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.participant-copy strong { color: #213d63; font-size: 16px; }
-.participant-copy > span { margin-top: 4px; color: #637b99; font-size: 12px; }
-.participant-copy .registration-code { color: #0b5bbd; font-size: 11px; font-weight: 700; }
-.athletes span { display: block; margin-top: 7px; color: #3b6188; font-size: 12px; }
-.athletes .q-icon { font-size: 14px; }
-.participant-row .q-badge { align-self: start; font-size: 10px; }
-.detail-toggle { min-height: 34px; margin: 0 10px 8px 66px; font-size: 11px; font-weight: 700; }
-.detail-panel { margin: 0 14px 14px 66px; padding: 12px; border: 1px solid #dbe9f8; border-radius: 10px; background: #f7fbff; }
-.athlete-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.athlete-detail { display: flex; flex-direction: column; gap: 4px; padding: 11px; border-radius: 8px; background: #fff; color: #536f8f; font-size: 11px; }
-.athlete-detail strong { margin: 2px 0; color: #174a81; font-size: 14px; }
-.athlete-title { color: #0870d1; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-.empty-state { padding: 25px; color: #8191a3; text-align: center; font-size: 12px; }
+.participant-content {
+  max-width: 720px;
+  margin: auto;
+}
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+.page-heading span {
+  color: #0753b6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+.page-heading p {
+  margin: 4px 0 0;
+  color: #74859b;
+  font-size: 13px;
+}
+.list-card {
+  overflow: hidden;
+  border: 1px solid #e2eaf2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 18px #173b6e0a;
+}
+.list-card > .q-input {
+  margin: 13px;
+}
+.participant-card {
+  border-top: 1px solid #edf1f5;
+}
+.participant-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 11px;
+  padding: 14px 14px 7px;
+}
+.participant-copy {
+  min-width: 0;
+}
+.participant-copy strong,
+.participant-copy > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.participant-copy strong {
+  color: #213d63;
+  font-size: 16px;
+}
+.participant-copy > span {
+  margin-top: 4px;
+  color: #637b99;
+  font-size: 12px;
+}
+.participant-copy .registration-code {
+  color: #0b5bbd;
+  font-size: 11px;
+  font-weight: 700;
+}
+.athletes span {
+  display: block;
+  margin-top: 7px;
+  color: #3b6188;
+  font-size: 12px;
+}
+.athletes .q-icon {
+  font-size: 14px;
+}
+.participant-row .q-badge {
+  align-self: start;
+  font-size: 10px;
+}
+.detail-toggle {
+  min-height: 34px;
+  margin: 0 10px 8px 66px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.detail-panel {
+  margin: 0 14px 14px 66px;
+  padding: 12px;
+  border: 1px solid #dbe9f8;
+  border-radius: 10px;
+  background: #f7fbff;
+}
+.athlete-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.athlete-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px;
+  border-radius: 8px;
+  background: #fff;
+  color: #536f8f;
+  font-size: 11px;
+}
+.athlete-detail strong {
+  margin: 2px 0;
+  color: #174a81;
+  font-size: 14px;
+}
+.athlete-title {
+  color: #0870d1;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.empty-state {
+  padding: 25px;
+  color: #8191a3;
+  text-align: center;
+  font-size: 12px;
+}
 @media (max-width: 480px) {
-  .participant-row { grid-template-columns: 38px minmax(0, 1fr); }
-  .participant-row .q-badge { grid-column: 2; }
-  .participant-row .q-avatar { width: 38px; height: 38px; }
-  .detail-toggle { margin-left: 52px; }
-  .detail-panel { margin-left: 52px; }
-  .athlete-detail-grid { grid-template-columns: 1fr; }
+  .participant-row {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+  .participant-row .q-badge {
+    grid-column: 2;
+  }
+  .participant-row .q-avatar {
+    width: 38px;
+    height: 38px;
+  }
+  .detail-toggle {
+    margin-left: 52px;
+  }
+  .detail-panel {
+    margin-left: 52px;
+  }
+  .athlete-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -47,6 +47,8 @@ export const useEventStore = defineStore('event', {
         this.hasMore = Boolean(paginator?.next_page_url)
         this.params.page += 1
       } catch (error) {
+        // Jangan biarkan infinite scroll terus mencoba request yang sama saat gagal.
+        this.hasMore = false
         Notify.create({
           type: 'negative',
           message: error.response?.data?.message || 'Data event tidak dapat dimuat.',

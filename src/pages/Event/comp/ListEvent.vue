@@ -68,19 +68,20 @@ import { useEventStore } from '@/stores/event'
 const store = useEventStore()
 let searchTimer
 
-function loadMore(index, done) {
-  store.getData().finally(done)
+async function loadMore(index, done) {
+  await store.getData()
+  done(!store.hasMore)
 }
 function searchData() {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => store.getData({ reset: true }), 300)
 }
 function formatDate(value) {
-  return value
-    ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(
-        new Date(`${value}T00:00:00`),
-      )
-    : '-'
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(date) : '-'
 }
 function formatCurrency(value) {
   return new Intl.NumberFormat('id-ID', {
@@ -137,7 +138,8 @@ function statusColor(status) {
   gap: 11px;
   align-items: start;
   padding: 14px;
-  border-top: 1px solid #edf1f5;
+  border-top: 1px solid #cddded;
+  background: #fff;
 }
 .event-copy {
   min-width: 0;
@@ -150,16 +152,16 @@ function statusColor(status) {
   white-space: nowrap;
 }
 .event-copy strong {
-  color: #213d63;
+  color: #000;
   font-size: 14px;
 }
 .event-copy span {
   margin-top: 3px;
-  color: #637b99;
+  color: #000;
   font-size: 11px;
 }
 .event-copy .event-code {
-  color: #0b5bbd;
+  color: #000;
   font-size: 10px;
   font-weight: 700;
 }

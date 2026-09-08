@@ -7,7 +7,25 @@
           <h1>Notifikasi</h1>
           <p>Informasi terbaru untuk pengurus ORADO.</p>
         </div>
-        <q-btn round flat icon="arrow_back" color="primary" aria-label="Kembali" @click="router.back()" />
+        <div class="row items-center q-gutter-xs">
+          <q-btn
+            v-if="notifikasi.jumlahBelumDibaca"
+            flat
+            dense
+            no-caps
+            color="primary"
+            label="Tandai semua dibaca"
+            @click="notifikasi.tandaiSemuaDibaca"
+          />
+          <q-btn
+            round
+            flat
+            icon="arrow_back"
+            color="primary"
+            aria-label="Kembali"
+            @click="router.back()"
+          />
+        </div>
       </div>
 
       <section class="notification-list">
@@ -22,7 +40,9 @@
           <div class="notification-copy">
             <strong>{{ item.title }}</strong>
             <span>{{ item.body }}</span>
-            <small v-if="item.menu_label"><q-icon name="open_in_new" /> {{ item.menu_label }}</small>
+            <small v-if="item.menu_label"
+              ><q-icon name="open_in_new" /> {{ item.menu_label }}</small
+            >
             <time>{{ waktuNotifikasi(item.dibuat_pada) }}</time>
           </div>
           <span v-if="!item.dibaca" class="unread-dot" />
@@ -48,7 +68,6 @@ const notifikasi = useNotifikasiStore()
 
 onMounted(() => {
   notifikasi.getData()
-  notifikasi.tandaiSemuaDibaca()
 })
 
 function waktuNotifikasi(value) {
@@ -63,23 +82,110 @@ function waktuNotifikasi(value) {
 </script>
 
 <style scoped>
-.notification-page { min-height: calc(100vh - 58px); padding: 20px 14px 40px; background: #f5f7fb; }
-.notification-content { max-width: 720px; margin: auto; }
-.page-heading { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 17px; }
-.page-heading span { color: #0753b6; font-size: 10px; font-weight: 800; letter-spacing: .7px; }
-.page-heading h1 { margin: 4px 0 0; color: #173b67; font-size: 23px; line-height: 1.1; }
-.page-heading p { margin: 5px 0 0; color: #71839a; font-size: 12px; }
-.notification-list { overflow: hidden; border: 1px solid #e1e9f2; border-radius: 14px; background: #fff; box-shadow: 0 5px 18px #173b6e0a; }
-.notification-row { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 11px; align-items: start; padding: 14px; border-top: 1px solid #edf1f5; cursor: pointer; }
-.notification-row:first-child { border-top: 0; }
-.notification-row.unread { background: #f5faff; }
-.notification-copy { min-width: 0; }
-.notification-copy strong, .notification-copy span, .notification-copy small, .notification-copy time { display: block; }
-.notification-copy strong { color: #1d416d; font-size: 13px; }
-.notification-copy span { margin-top: 3px; color: #58708e; font-size: 12px; line-height: 1.4; }
-.notification-copy small { margin-top: 5px; color: #1976d2; font-size: 10px; font-weight: 700; }
-.notification-copy time { margin-top: 5px; color: #8a9aac; font-size: 10px; }
-.unread-dot { width: 8px; height: 8px; margin-top: 5px; border-radius: 999px; background: #1976d2; }
-.empty-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 45px 20px; color: #8ba0b8; font-size: 12px; text-align: center; }
-.empty-state strong { color: #43668d; font-size: 14px; }
+.notification-page {
+  min-height: calc(100vh - 58px);
+  padding: 20px 14px 40px;
+  background: #f5f7fb;
+}
+.notification-content {
+  max-width: 720px;
+  margin: auto;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 17px;
+}
+.page-heading span {
+  color: #0753b6;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+}
+.page-heading h1 {
+  margin: 4px 0 0;
+  color: #173b67;
+  font-size: 23px;
+  line-height: 1.1;
+}
+.page-heading p {
+  margin: 5px 0 0;
+  color: #71839a;
+  font-size: 12px;
+}
+.notification-list {
+  overflow: hidden;
+  border: 1px solid #e1e9f2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px #173b6e0a;
+}
+.notification-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: start;
+  padding: 14px;
+  border-top: 1px solid #edf1f5;
+  cursor: pointer;
+}
+.notification-row:first-child {
+  border-top: 0;
+}
+.notification-row.unread {
+  background: #f5faff;
+}
+.notification-copy {
+  min-width: 0;
+}
+.notification-copy strong,
+.notification-copy span,
+.notification-copy small,
+.notification-copy time {
+  display: block;
+}
+.notification-copy strong {
+  color: #1d416d;
+  font-size: 13px;
+}
+.notification-copy span {
+  margin-top: 3px;
+  color: #58708e;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.notification-copy small {
+  margin-top: 5px;
+  color: #1976d2;
+  font-size: 10px;
+  font-weight: 700;
+}
+.notification-copy time {
+  margin-top: 5px;
+  color: #8a9aac;
+  font-size: 10px;
+}
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #1976d2;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 45px 20px;
+  color: #8ba0b8;
+  font-size: 12px;
+  text-align: center;
+}
+.empty-state strong {
+  color: #43668d;
+  font-size: 14px;
+}
 </style>

@@ -15,7 +15,7 @@
 
       <div class="section-heading">
         <span>MENU APLIKASI</span>
-        <small>12 layanan</small>
+        <small>{{ menus.length }} layanan</small>
       </div>
 
       <section class="menu-panel">
@@ -87,8 +87,10 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue'
 import { useLoginStore } from '@/stores/login'
 import { useRouter } from 'vue-router'
+import { api } from '@/boot/axios'
 
 const loginStore = useLoginStore()
 const router = useRouter()
@@ -111,45 +113,45 @@ const menus = [
   { title: 'Pemasukan', icon: 'south' },
   { title: 'Pengeluaran', icon: 'north' },
   { title: 'Laporan &\nAnalitik', icon: 'description' },
-  { title: 'Pengumuman', icon: 'campaign' },
+  { title: 'Pengumuman', icon: 'campaign', to: '/pengumuman' },
   { title: 'Pengaturan', icon: 'settings', to: '/pengaturan' },
   { title: 'Manajemen\nPengguna', icon: 'manage_accounts' },
 ]
 
-const summaryStats = [
+const summaryStats = ref([
   {
     label: 'Club aktif',
-    value: '48',
-    trend: '+4 bulan ini',
+    value: '-',
+    trend: 'Data dimuat',
     trendType: 'trend-up',
     tone: 'blue',
     icon: 'admin_panel_settings',
   },
   {
     label: 'Anggota',
-    value: '1.248',
-    trend: '+12%',
+    value: '-',
+    trend: 'Data dimuat',
     trendType: 'trend-up',
     tone: 'teal',
     icon: 'groups',
   },
   {
     label: 'Pengajuan',
-    value: '12',
-    trend: '3 menunggu',
+    value: '-',
+    trend: 'Data dimuat',
     trendType: 'trend-warn',
     tone: 'orange',
     icon: 'assignment',
   },
   {
     label: 'Kegiatan',
-    value: '8',
-    trend: 'Bulan ini',
+    value: '-',
+    trend: 'Data dimuat',
     trendType: 'trend-neutral',
     tone: 'purple',
     icon: 'calendar_month',
   },
-]
+])
 
 const activities = [
   {
@@ -183,6 +185,19 @@ async function handleLogout() {
 function openMenu(menu) {
   if (menu.to) router.push(menu.to)
 }
+
+onMounted(async () => {
+  const [anggota, club, event] = await Promise.allSettled([
+    api.get('/v1/master/anggota', { params: { per_page: 100 } }),
+    api.get('/v1/master/club', { params: { per_page: 100 } }),
+    api.get('/v3/event', { params: { per_page: 100 } }),
+  ])
+
+  const jumlah = (response) => response.value?.data?.data?.data?.length ?? '-'
+  summaryStats.value[0].value = jumlah(club)
+  summaryStats.value[1].value = jumlah(anggota)
+  summaryStats.value[3].value = jumlah(event)
+})
 </script>
 
 <style lang="scss" scoped>
