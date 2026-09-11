@@ -7,7 +7,8 @@ export const usePesertaEventStore = defineStore('peserta-event', {
     loading: false,
     items: [],
     hasMore: true,
-    params: { page: 1, search: '' },
+    eventOptions: [],
+    params: { page: 1, search: '', master_event_id: null },
   }),
   actions: {
     async getData({ reset = false } = {}) {
@@ -34,6 +35,18 @@ export const usePesertaEventStore = defineStore('peserta-event', {
         })
       } finally {
         this.loading = false
+      }
+    },
+
+    async getEventOptions() {
+      try {
+        const response = await api.get('/v3/event', { params: { per_page: 100 } })
+        this.eventOptions = response.data?.data?.data ?? []
+      } catch (error) {
+        Notify.create({
+          type: 'negative',
+          message: error.response?.data?.message || 'Pilihan event tidak dapat dimuat.',
+        })
       }
     },
   },

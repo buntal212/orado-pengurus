@@ -6,14 +6,33 @@
           <span>DATA PESERTA EVENT</span>
           <p>Daftar tim dan atlet yang telah melakukan pendaftaran.</p>
         </div>
-        <q-btn
-          round
-          flat
-          icon="arrow_back"
-          color="primary"
-          aria-label="Kembali"
-          @click="router.push('/')"
-        />
+        <div class="page-actions">
+          <q-btn
+            flat
+            no-caps
+            icon="picture_as_pdf"
+            color="primary"
+            label="Cetak PDF"
+            @click="cetakPdf"
+          />
+          <q-btn
+            flat
+            no-caps
+            icon="table_view"
+            color="primary"
+            label="Excel"
+            :loading="exporting"
+            @click="exportExcel"
+          />
+          <q-btn
+            round
+            flat
+            icon="arrow_back"
+            color="primary"
+            aria-label="Kembali"
+            @click="router.push('/')"
+          />
+        </div>
       </div>
 
       <section class="list-card">
@@ -26,6 +45,21 @@
         >
           <template #prepend><q-icon name="search" /></template>
         </q-input>
+        <q-select
+          v-model="store.params.master_event_id"
+          :options="store.eventOptions"
+          option-value="id"
+          option-label="nama_event"
+          emit-value
+          map-options
+          clearable
+          dense
+          outlined
+          label="Filter event"
+          @update:model-value="cari"
+        >
+          <template #prepend><q-icon name="event" /></template>
+        </q-select>
 
         <q-virtual-scroll
           v-if="store.items.length"
@@ -113,6 +147,9 @@
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Notify } from 'quasar'
+import { utils, writeFile } from 'xlsx'
+import { api } from '@/boot/axios'
 import { usePesertaEventStore } from '@/stores/peserta-event'
 
 const router = useRouter()
@@ -121,6 +158,7 @@ const store = usePesertaEventStore()
 let timer
 const expandedId = ref(null)
 const participantList = ref(null)
+const exporting = ref(false)
 const searchDariNotifikasi = String(route.query.search || '').trim()
 
 // Isi filter lebih awal agar request pertama langsung memakai nomor registrasi
@@ -128,7 +166,7 @@ const searchDariNotifikasi = String(route.query.search || '').trim()
 store.params.search = searchDariNotifikasi
 
 onMounted(async () => {
-  await store.getData({ reset: true })
+  await Promise.all([store.getEventOptions(), store.getData({ reset: true })])
 
   if (searchDariNotifikasi && store.items.length === 1) {
     expandedId.value = store.items[0].id
@@ -143,6 +181,95 @@ function cari() {
     expandedId.value = null
     await store.getData({ reset: true })
   }, 350)
+}
+
+function cetakPdf() {
+  router.push({
+    path: '/event-peserta/cetak',
+    query: store.params.master_event_id ? { master_event_id: store.params.master_event_id } : {},
+  })
+}
+
+async function exportExcel() {
+  exporting.value = true
+
+  try {
+    const response = await api.get('/v3/event/peserta/cetak', {
+      params: store.params.master_event_id ? { master_event_id: store.params.master_event_id } : {},
+    })
+    const peserta = response.data?.data ?? []
+    const namaEvent = response.data?.meta?.event?.nama_event || 'Semua Event'
+    const rows = peserta.flatMap((tim, index) =>
+      (tim.rincis || []).flatMap((detail) => [
+        buatBarisExcel(index + 1, tim, detail, 1),
+        buatBarisExcel(index + 1, tim, detail, 2),
+      ]),
+    )
+
+    if (!rows.length) {
+      Notify.create({ type: 'warning', message: 'Belum ada peserta event untuk diekspor.' })
+      return
+    }
+
+    const worksheet = utils.json_to_sheet(rows)
+    worksheet['!cols'] = [
+      { wch: 6 },
+      { wch: 24 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 10 },
+      { wch: 28 },
+      { wch: 22 },
+      { wch: 16 },
+      { wch: 10 },
+      { wch: 16 },
+      { wch: 18 },
+      { wch: 14 },
+    ]
+    worksheet['!autofilter'] = { ref: `A1:L${rows.length + 1}` }
+
+    const workbook = utils.book_new()
+    utils.book_append_sheet(workbook, worksheet, 'Peserta Event')
+    const namaFile = `peserta-event-${slugFile(namaEvent)}.xlsx`
+    writeFile(workbook, namaFile, { compression: true })
+
+    Notify.create({ type: 'positive', message: 'File Excel berhasil dibuat.' })
+  } catch (error) {
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.message || 'File Excel tidak dapat dibuat.',
+    })
+  } finally {
+    exporting.value = false
+  }
+}
+
+function buatBarisExcel(nomor, tim, detail, nomorAtlet) {
+  const suffix = nomorAtlet === 1 ? 'satu' : 'dua'
+  const tanggalLahir = detail[`tanggal_lahir_atlet_${suffix}`]
+
+  return {
+    No: nomor,
+    'Nama Club': tim.nama_tim || '-',
+    'Nomor Daftar': tim.kode_pendaftaran || '-',
+    Event: tim.event?.nama_event || '-',
+    Atlet: `Atlet ${nomorAtlet}`,
+    'Nama Atlet': detail[`nama_atlet_${suffix}`] || '-',
+    NIK: detail[`nik_atlet_${suffix}`] || '-',
+    'Tanggal Lahir': formatTanggal(tanggalLahir),
+    Umur: hitungUmur(tanggalLahir),
+    'Jenis Kelamin': detail[`jenis_kelamin_atlet_${suffix}`] || '-',
+    'No. WhatsApp': detail[`no_hp_atlet_${suffix}`] || '-',
+    Status: labelStatus(tim.status_pendaftaran),
+  }
+}
+
+function slugFile(value) {
+  return String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 function labelStatus(status) {
@@ -201,6 +328,11 @@ function loadMore({ index, to }) {
   justify-content: space-between;
   margin-bottom: 17px;
 }
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
 .page-heading span {
   color: #0753b6;
   font-size: 11px;
@@ -221,6 +353,9 @@ function loadMore({ index, to }) {
 }
 .list-card > .q-input {
   margin: 13px;
+}
+.list-card > .q-select {
+  margin: 0 13px 13px;
 }
 .participant-card {
   border-top: 1px solid #edf1f5;
