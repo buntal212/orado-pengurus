@@ -27,72 +27,81 @@
           <template #prepend><q-icon name="search" /></template>
         </q-input>
 
-        <article v-for="item in store.items" :key="item.id" class="participant-card">
-          <div class="participant-row">
-            <q-avatar color="blue-1" text-color="primary" icon="groups" />
-            <div class="participant-copy">
-              <strong>{{ item.nama_tim }}</strong>
-              <span class="registration-code">{{ item.kode_pendaftaran }}</span>
-              <span>{{ item.event?.nama_event }}</span>
-              <div v-for="detail in item.rincis" :key="detail.id" class="athletes">
-                <span
-                  ><q-icon name="person" /> {{ detail.nama_atlet_satu }} &amp;
-                  {{ detail.nama_atlet_dua }}</span
-                >
-              </div>
-            </div>
-            <q-badge
-              color="blue-1"
-              text-color="primary"
-              :label="labelStatus(item.status_pendaftaran)"
-            />
-          </div>
-          <q-btn
-            flat
-            no-caps
-            class="detail-toggle"
-            color="primary"
-            :icon="expandedId === item.id ? 'expand_less' : 'expand_more'"
-            :label="expandedId === item.id ? 'Tutup rincian atlet' : 'Lihat rincian atlet'"
-            @click="toggleDetail(item.id)"
-          />
-          <q-slide-transition>
-            <section v-show="expandedId === item.id" class="detail-panel">
-              <div
-                v-for="detail in item.rincis"
-                :key="`detail-${detail.id}`"
-                class="athlete-detail-grid"
-              >
-                <div class="athlete-detail">
-                  <div class="athlete-title"><q-icon name="looks_one" /> Atlet 1</div>
-                  <strong>{{ detail.nama_atlet_satu }}</strong>
-                  <span>NIK: {{ detail.nik_atlet_satu || '-' }}</span>
-                  <span>Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_satu) }}</span>
-                  <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_satu) }}</span>
-                  <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_satu || '-' }}</span>
-                  <span>No. WhatsApp: {{ detail.no_hp_atlet_satu || '-' }}</span>
+        <q-virtual-scroll
+          v-if="store.items.length"
+          ref="participantList"
+          :items="store.items"
+          :virtual-scroll-item-size="142"
+          :virtual-scroll-slice-size="15"
+          class="participant-virtual-list"
+          @virtual-scroll="loadMore"
+        >
+          <template #default="{ item, index }">
+            <article :key="item.id" class="participant-card">
+              <div class="participant-row">
+                <q-avatar color="blue-1" text-color="primary">{{ index + 1 }}</q-avatar>
+                <div class="participant-copy">
+                  <strong>{{ item.nama_tim }}</strong>
+                  <span class="registration-code">{{ item.kode_pendaftaran }}</span>
+                  <span>{{ item.event?.nama_event }}</span>
+                  <div v-for="detail in item.rincis" :key="detail.id" class="athletes">
+                    <span
+                      ><q-icon name="person" /> {{ detail.nama_atlet_satu }} &amp;
+                      {{ detail.nama_atlet_dua }}</span
+                    >
+                  </div>
                 </div>
-                <div class="athlete-detail">
-                  <div class="athlete-title"><q-icon name="looks_two" /> Atlet 2</div>
-                  <strong>{{ detail.nama_atlet_dua }}</strong>
-                  <span>NIK: {{ detail.nik_atlet_dua || '-' }}</span>
-                  <span>Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_dua) }}</span>
-                  <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_dua) }}</span>
-                  <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_dua || '-' }}</span>
-                  <span>No. WhatsApp: {{ detail.no_hp_atlet_dua || '-' }}</span>
-                </div>
+                <q-badge
+                  color="blue-1"
+                  text-color="primary"
+                  :label="labelStatus(item.status_pendaftaran)"
+                />
               </div>
-            </section>
-          </q-slide-transition>
-        </article>
-
-        <q-infinite-scroll :offset="120" @load="loadMore">
-          <template #loading>
-            <div class="row justify-center q-pa-md">
-              <q-spinner-dots color="primary" size="26px" />
-            </div>
+              <q-btn
+                flat
+                no-caps
+                class="detail-toggle"
+                color="primary"
+                :icon="expandedId === item.id ? 'expand_less' : 'expand_more'"
+                :label="expandedId === item.id ? 'Tutup rincian atlet' : 'Lihat rincian atlet'"
+                @click="toggleDetail(item.id)"
+              />
+              <q-slide-transition>
+                <section v-show="expandedId === item.id" class="detail-panel">
+                  <div
+                    v-for="detail in item.rincis"
+                    :key="`detail-${detail.id}`"
+                    class="athlete-detail-grid"
+                  >
+                    <div class="athlete-detail">
+                      <div class="athlete-title"><q-icon name="looks_one" /> Atlet 1</div>
+                      <strong>{{ detail.nama_atlet_satu }}</strong>
+                      <span>NIK: {{ detail.nik_atlet_satu || '-' }}</span>
+                      <span
+                        >Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_satu) }}</span
+                      >
+                      <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_satu) }}</span>
+                      <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_satu || '-' }}</span>
+                      <span>No. WhatsApp: {{ detail.no_hp_atlet_satu || '-' }}</span>
+                    </div>
+                    <div class="athlete-detail">
+                      <div class="athlete-title"><q-icon name="looks_two" /> Atlet 2</div>
+                      <strong>{{ detail.nama_atlet_dua }}</strong>
+                      <span>NIK: {{ detail.nik_atlet_dua || '-' }}</span>
+                      <span
+                        >Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_dua) }}</span
+                      >
+                      <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_dua) }}</span>
+                      <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_dua || '-' }}</span>
+                      <span>No. WhatsApp: {{ detail.no_hp_atlet_dua || '-' }}</span>
+                    </div>
+                  </div>
+                </section>
+              </q-slide-transition>
+            </article>
           </template>
-        </q-infinite-scroll>
+        </q-virtual-scroll>
+
         <div v-if="!store.loading && !store.items.length" class="empty-state">
           Belum ada peserta event.
         </div>
@@ -102,7 +111,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePesertaEventStore } from '@/stores/peserta-event'
 
@@ -111,29 +120,39 @@ const route = useRoute()
 const store = usePesertaEventStore()
 let timer
 const expandedId = ref(null)
+const participantList = ref(null)
 const searchDariNotifikasi = String(route.query.search || '').trim()
 
-// Infinite scroll dapat memulai request sebelum onMounted. Isi filter lebih awal
-// agar request pertama langsung memakai nomor registrasi dari notifikasi.
+// Isi filter lebih awal agar request pertama langsung memakai nomor registrasi
+// dari notifikasi.
 store.params.search = searchDariNotifikasi
 
 onMounted(async () => {
   await store.getData({ reset: true })
 
-  if (searchDariNotifikasi && store.items.length === 1) expandedId.value = store.items[0].id
+  if (searchDariNotifikasi && store.items.length === 1) {
+    expandedId.value = store.items[0].id
+    await nextTick()
+    participantList.value?.refresh()
+  }
 })
 
 function cari() {
   window.clearTimeout(timer)
-  timer = window.setTimeout(() => store.getData({ reset: true }), 350)
+  timer = window.setTimeout(async () => {
+    expandedId.value = null
+    await store.getData({ reset: true })
+  }, 350)
 }
 
 function labelStatus(status) {
   return String(status).toLowerCase() === 'menunggu' ? 'Terdaftar' : status
 }
 
-function toggleDetail(id) {
+async function toggleDetail(id) {
   expandedId.value = expandedId.value === id ? null : id
+  await nextTick()
+  participantList.value?.refresh()
 }
 
 function formatTanggal(tanggal) {
@@ -161,9 +180,8 @@ function hitungUmur(tanggal) {
   return `${umur} tahun`
 }
 
-async function loadMore(index, done) {
-  await store.getData()
-  done(store.hasMore)
+function loadMore({ index, to }) {
+  if (index > 0 && to >= store.items.length - 3) void store.getData()
 }
 </script>
 
@@ -206,6 +224,9 @@ async function loadMore(index, done) {
 }
 .participant-card {
   border-top: 1px solid #edf1f5;
+}
+.participant-virtual-list {
+  height: min(65vh, 680px);
 }
 .participant-row {
   display: grid;

@@ -71,18 +71,6 @@
         </div>
       </section>
     </main>
-
-    <nav class="bottom-nav" aria-label="Navigasi utama">
-      <button type="button" class="nav-item nav-item--active">
-        <q-icon name="home" /><span>Home</span>
-      </button>
-      <button type="button" class="nav-item">
-        <q-icon name="person_outline" /><span>Akun</span>
-      </button>
-      <button type="button" class="nav-item" @click="handleLogout">
-        <q-icon name="logout" /><span>Logout</span>
-      </button>
-    </nav>
   </q-page>
 </template>
 
@@ -177,11 +165,6 @@ const activities = [
   },
 ]
 
-async function handleLogout() {
-  await loginStore.logout()
-  router.replace('/login')
-}
-
 function openMenu(menu) {
   if (menu.to) router.push(menu.to)
 }
@@ -203,7 +186,7 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .sso-page {
   min-height: calc(100vh - 58px);
-  padding: 0 14px 92px;
+  padding: 0 14px 24px;
   color: #122a4c;
   background: linear-gradient(180deg, #002451 0, #002451 86px, #eaf0f8 86px);
 }
@@ -638,41 +621,6 @@ onMounted(async () => {
   color: #9aa8ba;
 }
 
-.bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  gap: 38px;
-  padding: 11px 12px calc(11px + env(safe-area-inset-bottom));
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  background: #002451;
-}
-.nav-item {
-  display: flex;
-  min-width: 66px;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border: 0;
-  color: rgba(255, 255, 255, 0.72);
-  background: transparent;
-  font-family: inherit;
-  font-size: 10px;
-  cursor: pointer;
-}
-.nav-item > .q-icon,
-.notification-icon > .q-icon {
-  font-size: 24px;
-}
-.nav-item--active {
-  color: #fff;
-  font-weight: 700;
-}
 .notification-icon {
   position: relative;
   display: inline-flex;

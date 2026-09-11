@@ -7,7 +7,7 @@ export const usePesertaEventStore = defineStore('peserta-event', {
     loading: false,
     items: [],
     hasMore: true,
-    params: { page: 1, per_page: 15, search: '' },
+    params: { page: 1, search: '' },
   }),
   actions: {
     async getData({ reset = false } = {}) {
@@ -20,7 +20,9 @@ export const usePesertaEventStore = defineStore('peserta-event', {
 
       this.loading = true
       try {
-        const response = await api.get('/v3/event/peserta', { params: this.params })
+        const response = await api.get('/v3/event/peserta', {
+          params: this.params,
+        })
         const paginator = response.data?.data
         this.items.push(...(paginator?.data ?? []))
         this.hasMore = Boolean(paginator?.next_page_url)

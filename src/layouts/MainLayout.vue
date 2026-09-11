@@ -76,13 +76,39 @@
       </q-toolbar>
     </q-header>
     <q-page-container><router-view /></q-page-container>
+    <q-footer class="bottom-nav">
+      <nav aria-label="Navigasi utama">
+        <button
+          type="button"
+          :class="['nav-item', { 'nav-item--active': route.path === '/' }]"
+          @click="router.push('/')"
+        >
+          <q-icon name="home" /><span>Home</span>
+        </button>
+        <button
+          type="button"
+          :class="['nav-item', { 'nav-item--active': route.path === '/pengaturan' }]"
+          @click="router.push('/pengaturan')"
+        >
+          <q-icon name="person_outline" /><span>Akun</span>
+        </button>
+        <button type="button" class="nav-item" @click="handleLogout">
+          <q-icon name="logout" /><span>Logout</span>
+        </button>
+      </nav>
+    </q-footer>
   </q-layout>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useLoginStore } from '@/stores/login'
 import { useNotifikasiStore } from '@/stores/notifikasi'
 
+const router = useRouter()
+const route = useRoute()
+const loginStore = useLoginStore()
 const notifikasi = useNotifikasiStore()
 const badgeLabel = computed(() =>
   notifikasi.jumlahBelumDibaca > 99 ? '99+' : notifikasi.jumlahBelumDibaca,
@@ -98,6 +124,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => window.clearInterval(notificationInterval))
+
+async function handleLogout() {
+  await loginStore.logout()
+  await router.replace('/login')
+}
 
 function waktuNotifikasi(value) {
   return new Intl.DateTimeFormat('id-ID', {
@@ -201,5 +232,36 @@ function waktuNotifikasi(value) {
   color: #87a0ba;
   font-size: 11px;
   text-align: center;
+}
+.bottom-nav {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: #002451;
+}
+.bottom-nav nav {
+  display: flex;
+  justify-content: center;
+  gap: 38px;
+  padding: 11px 12px calc(11px + env(safe-area-inset-bottom));
+}
+.nav-item {
+  display: flex;
+  min-width: 66px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 0;
+  color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.nav-item > .q-icon {
+  font-size: 24px;
+}
+.nav-item--active {
+  color: #fff;
+  font-weight: 700;
 }
 </style>
