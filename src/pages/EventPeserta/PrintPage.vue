@@ -49,7 +49,7 @@
               <strong>{{ card.nik || '-' }}</strong>
             </div>
             <div class="club-data">
-              <span>Nama club</span>
+              <span>Nama Tim</span>
               <strong>{{ card.nama_tim || '-' }}</strong>
             </div>
           </div>
