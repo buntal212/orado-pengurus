@@ -13,7 +13,7 @@
             src="@/assets/orado/logo-white.svg"
             alt="Logo resmi ORADO"
           />
-          <p class="brand-subtitle">Organisasi Olahraga Amatir</p>
+          <p class="brand-subtitle">Organisasi Olahraga Domino</p>
           <p class="brand-subtitle brand-subtitle--country">Republik Indonesia</p>
           <p class="brand-location">Kota Probolinggo</p>
         </div>
