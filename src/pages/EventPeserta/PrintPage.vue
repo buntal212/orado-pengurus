@@ -2,61 +2,64 @@
   <q-page class="print-page">
     <div class="print-toolbar">
       <q-btn flat no-caps icon="arrow_back" label="Kembali" @click="router.back()" />
-      <q-btn
-        color="primary"
-        no-caps
-        icon="picture_as_pdf"
-        label="Cetak / Simpan PDF"
-        @click="cetak"
-      />
+      <q-btn color="primary" no-caps icon="print" label="Cetak Kartu" @click="cetak" />
     </div>
 
-    <main class="print-sheet">
-      <OradoReportHeader />
-      <header class="report-header">
-        <h1>Daftar Peserta Event ORADO Kota Probolinggo</h1>
-        <span>Dicetak: {{ tanggalCetak }}</span>
-        <p>{{ event?.nama_event || 'Semua Event' }}</p>
-      </header>
-
+    <main class="badge-sheet">
       <div v-if="loading" class="report-status">
-        <q-spinner-dots color="primary" size="30px" /> Memuat data peserta...
+        <q-spinner-dots color="primary" size="30px" /> Memuat kartu peserta...
       </div>
-      <div v-else-if="!reportGroups.length" class="report-status">
-        Belum ada peserta untuk dicetak.
-      </div>
-      <table v-else class="report-table">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Data Atlet</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="(group, groupIndex) in reportGroups" :key="group.id">
-            <tr v-for="(atlet, atletIndex) in group.atlets" :key="atlet.id">
-              <td v-if="atletIndex === 0" :rowspan="group.atlets.length">{{ groupIndex + 1 }}</td>
-              <td class="athlete-record">
-                <div v-if="atletIndex === 0" class="team-info">
-                  <strong>{{ group.nama_tim || '-' }}</strong>
-                  <span>Nomor daftar: {{ group.kode_pendaftaran || '-' }}</span>
-                </div>
-                <div class="athlete-name">
-                  <span>{{ atlet.label }}</span>
-                  <strong>{{ atlet.nama || '-' }}</strong>
-                </div>
-                <div class="athlete-data">
-                  <span>NIK: {{ atlet.nik || '-' }}</span>
-                  <span>Lahir: {{ formatTanggal(atlet.tanggal_lahir) }}</span>
-                  <span>Umur: {{ hitungUmur(atlet.tanggal_lahir) }}</span>
-                  <span>JK: {{ atlet.jenis_kelamin || '-' }}</span>
-                  <span>HP: {{ atlet.no_hp || '-' }}</span>
-                </div>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+      <div v-else-if="!cards.length" class="report-status">Belum ada peserta untuk dicetak.</div>
+      <section v-else class="badge-grid" aria-label="Kartu peserta event">
+        <article v-for="(card, index) in cards" :key="card.id" class="participant-badge">
+          <div class="badge-top">
+            <div class="brand-mark" aria-label="ORADO Kota Probolinggo">
+              <div class="brand-logos">
+                <img
+                  class="partner-logo koni-logo"
+                  src="@/assets/partner/logo-koni.svg"
+                  alt="Logo KONI"
+                />
+                <img class="brand-logo" src="@/assets/orado/logo-white.svg" alt="Logo ORADO" />
+                <img
+                  class="partner-logo tni-logo"
+                  src="@/assets/partner/logo-tni.svg"
+                  alt="Logo TNI"
+                />
+              </div>
+            </div>
+            <span class="badge-number">{{ String(index + 1).padStart(3, '0') }}</span>
+          </div>
+
+          <div class="badge-pattern pattern-top"></div>
+          <div class="badge-pattern pattern-bottom"></div>
+          <img class="badge-watermark" src="@/assets/orado/logo-white.svg" alt="" />
+
+          <div class="badge-content">
+            <p class="brand-copy badge-org">ORADO<small>KOTA PROBOLINGGO</small></p>
+            <p class="badge-label">PESERTA</p>
+            <p class="event-name">{{ event?.nama_event || 'EVENT ORADO' }}</p>
+
+            <div class="participant-data">
+              <span>Nama atlet</span>
+              <strong>{{ card.nama || '-' }}</strong>
+            </div>
+            <div class="participant-data nik-data">
+              <span>NIK atlet</span>
+              <strong>{{ card.nik || '-' }}</strong>
+            </div>
+            <div class="club-data">
+              <span>Nama club</span>
+              <strong>{{ card.nama_tim || '-' }}</strong>
+            </div>
+          </div>
+
+          <footer class="badge-footer">
+            <span>{{ event?.kode_event || 'ORADO' }}</span>
+            <span>OFFICIAL PARTICIPANT</span>
+          </footer>
+        </article>
+      </section>
     </main>
   </q-page>
 </template>
@@ -66,7 +69,6 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import { api } from '@/boot/axios'
-import OradoReportHeader from '@/components/OradoReportHeader.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,38 +77,26 @@ const participants = ref([])
 const event = ref(null)
 const eventId = Number(route.query.master_event_id) || null
 
-const reportGroups = computed(() =>
-  participants.value
-    .map((participant) => ({
-      ...participant,
-      atlets: (participant.rincis || []).flatMap((rinci) => [
+const cards = computed(() =>
+  participants.value.flatMap((participant) =>
+    (participant.rincis || []).flatMap((rinci) =>
+      [
         {
           id: `${rinci.id}-1`,
-          label: 'Atlet 1',
-          nik: rinci.nik_atlet_satu,
+          nama_tim: participant.nama_tim,
           nama: rinci.nama_atlet_satu,
-          tanggal_lahir: rinci.tanggal_lahir_atlet_satu,
-          jenis_kelamin: rinci.jenis_kelamin_atlet_satu,
-          no_hp: rinci.no_hp_atlet_satu,
+          nik: rinci.nik_atlet_satu,
         },
         {
           id: `${rinci.id}-2`,
-          label: 'Atlet 2',
-          nik: rinci.nik_atlet_dua,
+          nama_tim: participant.nama_tim,
           nama: rinci.nama_atlet_dua,
-          tanggal_lahir: rinci.tanggal_lahir_atlet_dua,
-          jenis_kelamin: rinci.jenis_kelamin_atlet_dua,
-          no_hp: rinci.no_hp_atlet_dua,
+          nik: rinci.nik_atlet_dua,
         },
-      ]),
-    }))
-    .filter((participant) => participant.atlets.length),
+      ].filter((atlet) => atlet.nama || atlet.nik),
+    ),
+  ),
 )
-const tanggalCetak = new Intl.DateTimeFormat('id-ID', {
-  day: '2-digit',
-  month: 'long',
-  year: 'numeric',
-}).format(new Date())
 
 onMounted(loadData)
 
@@ -131,152 +121,256 @@ async function loadData() {
 function cetak() {
   window.print()
 }
-
-function formatTanggal(tanggal) {
-  if (!tanggal) return '-'
-
-  return new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(`${tanggal}T00:00:00`))
-}
-
-function hitungUmur(tanggal) {
-  if (!tanggal) return '-'
-
-  const lahir = new Date(`${tanggal}T00:00:00`)
-  const hariIni = new Date()
-  let umur = hariIni.getFullYear() - lahir.getFullYear()
-  const belumUlangTahun =
-    hariIni.getMonth() < lahir.getMonth() ||
-    (hariIni.getMonth() === lahir.getMonth() && hariIni.getDate() < lahir.getDate())
-
-  if (belumUlangTahun) umur -= 1
-
-  return `${umur} th`
-}
 </script>
 
 <style scoped>
 .print-page {
   min-height: calc(100vh - 58px);
   padding: 20px;
-  background: #f4f7fb;
+  background: #edf2f6;
 }
 .print-toolbar {
   display: flex;
-  width: min(1280px, 100%);
+  width: min(920px, 100%);
   justify-content: space-between;
   margin: 0 auto 14px;
 }
-.print-sheet {
-  width: min(900px, 100%);
+.badge-sheet {
+  width: min(920px, 100%);
+  min-height: 300px;
   margin: auto;
-  padding: 28px;
+  padding: 22px;
   background: #fff;
   box-shadow: 0 3px 18px rgba(17, 47, 82, 0.12);
 }
-.report-header {
+.badge-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  justify-items: center;
+}
+.participant-badge {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 388px;
+  min-height: 535px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e8b275;
+  border-radius: 5px;
+  background: #fffdf9;
+  box-shadow: 0 3px 12px rgba(131, 61, 20, 0.18);
+  color: #2f241e;
+}
+.participant-badge::before {
+  position: absolute;
+  z-index: 0;
+  top: 68px;
+  right: -38px;
+  width: 168px;
+  height: 168px;
+  border: 22px solid rgba(224, 113, 30, 0.09);
+  border-radius: 50%;
+  content: '';
+}
+.badge-top,
+.badge-content,
+.badge-footer {
+  position: relative;
+  z-index: 1;
+}
+.badge-top {
+  display: flex;
   align-items: flex-start;
-  column-gap: 16px;
-  row-gap: 2px;
-  padding-top: 2px;
-  margin-bottom: 3px;
-  color: #173c69;
+  justify-content: space-between;
+  padding: 20px 22px 0;
+  color: #bd5b1c;
 }
-.report-header h1 {
-  margin: 0;
-  font-size: 20px;
-  line-height: 1.1;
-}
-.report-header p,
-.report-header > span {
-  margin: 0;
-  color: #617892;
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
-  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: 0.7px;
 }
-.report-header p {
-  grid-column: 1 / -1;
+.brand-copy small {
+  display: block;
+  margin-top: 1px;
+  font-size: 5px;
+  font-weight: 700;
+  letter-spacing: 0.35px;
+}
+.brand-logos {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.brand-logo {
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(40%) sepia(69%) saturate(813%) hue-rotate(343deg)
+    brightness(86%) contrast(92%);
+}
+.partner-logo {
+  width: 26px;
+  height: 27px;
+  object-fit: contain;
+}
+.koni-logo {
+  width: 24px;
+}
+.tni-logo {
+  width: 27px;
+}
+.badge-number {
+  padding-top: 2px;
+  color: #bc6c33;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+.badge-pattern {
+  position: absolute;
+  z-index: 0;
+  width: 220px;
+  height: 115px;
+  background: repeating-linear-gradient(
+    72deg,
+    transparent 0 16px,
+    rgba(206, 75, 26, 0.16) 17px 19px,
+    transparent 20px 33px
+  );
+}
+.pattern-top {
+  top: 42px;
+  left: -106px;
+  transform: rotate(-18deg);
+}
+.pattern-bottom {
+  right: -100px;
+  bottom: 32px;
+  transform: rotate(164deg);
+}
+.badge-watermark {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: 245px;
+  height: 245px;
+  opacity: 0.07;
+  transform: translate(-50%, -33%);
+  filter: brightness(0) saturate(100%) invert(39%) sepia(50%) saturate(1775%) hue-rotate(346deg)
+    brightness(89%) contrast(91%);
+}
+.badge-content {
+  padding: 66px 30px 22px;
   text-align: center;
+}
+.badge-org {
+  margin: 0 0 10px;
+  color: #bd5b1c;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.badge-org small {
+  color: #9e4d1c;
+}
+.badge-label {
+  margin: 0;
+  color: #d65f1e;
+  font-size: 47px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  line-height: 0.95;
+}
+.event-name {
+  min-height: 36px;
+  margin: 13px auto 41px;
+  color: #9e4d1c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+.participant-data,
+.club-data {
+  position: relative;
+  z-index: 1;
+  text-align: left;
+}
+.participant-data span,
+.club-data span {
+  display: block;
+  margin-bottom: 4px;
+  color: #a85b2c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.participant-data strong,
+.club-data strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #1f1b19;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.12;
+}
+.nik-data {
+  margin-top: 23px;
+}
+.nik-data strong {
+  color: #51301e;
+  font-size: 16px;
+  letter-spacing: 0.4px;
+}
+.club-data {
+  margin-top: 28px;
+  padding: 16px 17px;
+  border-left: 5px solid #d65f1e;
+  background: #f9e8d8;
+}
+.club-data strong {
+  color: #b65019;
+  font-size: 20px;
+  text-transform: uppercase;
+}
+.badge-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: 13px 22px;
+  background: #c9531b;
+  color: #fff7ee;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
 }
 .report-status {
   display: flex;
+  min-height: 180px;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 180px;
   color: #617892;
 }
-.report-table {
-  width: 100%;
-  border-collapse: collapse;
-  color: #000;
-  font-size: 12px;
-}
-.report-table th,
-.report-table td {
-  padding: 6px 5px;
-  border: 1px solid #9eafc3;
-  text-align: left;
-  vertical-align: top;
-}
-.report-table th {
-  color: #fff;
-  background: #06366d;
-  font-weight: 700;
-}
-.report-table th:first-child {
-  width: 7%;
-}
-.report-table td:first-child,
-.report-table th:first-child {
-  text-align: center;
-}
-.athlete-name span,
-.athlete-name strong {
-  display: block;
-}
-.team-info strong,
-.team-info span,
-.athlete-name span {
-  display: block;
-}
-.team-info span,
-.athlete-name span {
-  margin-top: 3px;
-  color: #000;
-  font-size: 11px;
-}
-.team-info {
-  margin-bottom: 6px;
-  padding-bottom: 5px;
-  border-bottom: 1px dashed #b8c7d5;
-}
-.athlete-name {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 3px;
-}
-.athlete-name span {
-  margin: 0;
-  font-weight: 700;
-}
-.athlete-data {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px 10px;
-}
-.athlete-data span {
-  white-space: nowrap;
-}
-@media (max-width: 900px) {
-  .print-sheet {
-    padding: 16px;
+@media (max-width: 640px) {
+  .print-page {
+    padding: 12px;
+  }
+  .badge-sheet {
+    padding: 14px;
+  }
+  .badge-grid {
+    grid-template-columns: 1fr;
   }
 }
 @media print {
@@ -293,39 +387,33 @@ function hitungUmur(tanggal) {
     padding: 0 !important;
   }
   .print-page,
-  .print-sheet {
+  .badge-sheet {
     min-height: 0;
     padding: 0;
     background: #fff;
     box-shadow: none;
   }
-  .report-header {
-    padding-top: 0;
-    margin-bottom: 2px;
+  .badge-sheet {
+    width: 100%;
   }
-  .report-header h1 {
-    font-size: 15px;
+  .badge-grid {
+    width: 183mm;
+    height: 269mm;
+    margin: 0 auto;
+    grid-template-columns: repeat(2, 89mm);
+    grid-template-rows: repeat(2, 132mm);
+    gap: 5mm;
+    align-content: start;
   }
-  .report-table {
-    font-size: 9.5px;
-  }
-  .report-table th,
-  .report-table td {
-    padding: 3px 2px;
-  }
-  .report-table th {
+  .participant-badge {
+    width: 89mm;
+    max-width: none;
+    height: 132mm;
+    min-height: 0;
+    break-inside: avoid;
+    box-shadow: none;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
-  }
-  .report-table thead {
-    display: table-header-group;
-  }
-  .report-table tr {
-    break-inside: avoid;
-  }
-  .team-info span,
-  .athlete-name span {
-    font-size: 8.5px;
   }
 }
 </style>

@@ -37,6 +37,15 @@
           flat
           round
           dense
+          icon="print"
+          color="primary"
+          aria-label="Cetak"
+          @click="cetak(event)"
+        />
+        <q-btn
+          flat
+          round
+          dense
           icon="edit"
           color="primary"
           aria-label="Edit"
@@ -63,8 +72,10 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import { useEventStore } from '@/stores/event'
 
+const router = useRouter()
 const store = useEventStore()
 let searchTimer
 
@@ -75,6 +86,12 @@ async function loadMore(index, done) {
 function searchData() {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => store.getData({ reset: true }), 300)
+}
+function cetak(event) {
+  router.push({
+    path: '/event-peserta/cetak',
+    query: { master_event_id: event.id },
+  })
 }
 function formatDate(value) {
   const date = new Date(value)
