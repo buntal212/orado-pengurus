@@ -318,7 +318,9 @@ function cetak() {
 .participant-data strong,
 .club-data strong {
   display: block;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #1f1b19;
   font-size: 22px;
   font-weight: 900;
