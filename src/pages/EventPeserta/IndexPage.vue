@@ -11,7 +11,7 @@
             flat
             no-caps
             icon="picture_as_pdf"
-            color="primary"
+            color="black"
             label="Cetak PDF"
             @click="cetakPdf"
           />
@@ -19,7 +19,7 @@
             flat
             no-caps
             icon="table_view"
-            color="primary"
+            color="black"
             label="Excel"
             :loading="exporting"
             @click="exportExcel"
@@ -28,7 +28,7 @@
             round
             flat
             icon="arrow_back"
-            color="primary"
+            color="black"
             aria-label="Kembali"
             @click="router.push('/')"
           />
@@ -40,10 +40,22 @@
           v-model="store.params.search"
           dense
           outlined
-          placeholder="Cari nomor daftar, tim, atau event"
+          placeholder="Cari nomor daftar, tim, atlet, atau event"
           @update:model-value="cari"
         >
           <template #prepend><q-icon name="search" /></template>
+          <template #append>
+            <q-btn
+              v-if="store.params.search"
+              flat
+              round
+              dense
+              icon="close"
+              color="black"
+              aria-label="Hapus pencarian"
+              @click="hapusPencarian"
+            />
+          </template>
         </q-input>
         <q-select
           v-model="store.params.master_event_id"
@@ -61,84 +73,125 @@
           <template #prepend><q-icon name="event" /></template>
         </q-select>
 
-        <q-virtual-scroll
-          v-if="store.items.length"
-          ref="participantList"
-          :items="store.items"
-          :virtual-scroll-item-size="142"
-          :virtual-scroll-slice-size="15"
-          class="participant-virtual-list"
-          @virtual-scroll="loadMore"
-        >
-          <template #default="{ item, index }">
-            <article :key="item.id" class="participant-card">
-              <div class="participant-row">
-                <q-avatar color="blue-1" text-color="primary">{{ index + 1 }}</q-avatar>
-                <div class="participant-copy">
-                  <strong>{{ item.nama_tim }}</strong>
-                  <span class="registration-code">{{ item.kode_pendaftaran }}</span>
-                  <span>{{ item.event?.nama_event }}</span>
-                  <div v-for="detail in item.rincis" :key="detail.id" class="athletes">
-                    <span
-                      ><q-icon name="person" /> {{ detail.nama_atlet_satu }} &amp;
-                      {{ detail.nama_atlet_dua }}</span
-                    >
+        <section class="participant-list-area">
+          <q-virtual-scroll
+            v-if="store.items.length"
+            ref="participantList"
+            :items="store.items"
+            :virtual-scroll-item-size="200"
+            :virtual-scroll-slice-size="15"
+            class="participant-virtual-list"
+            @virtual-scroll="loadMore"
+          >
+            <template #default="{ item, index }">
+              <article :key="item.id" class="participant-card">
+                <div class="participant-row">
+                  <q-avatar color="blue-1" text-color="black">{{ index + 1 }}</q-avatar>
+                  <div class="participant-copy">
+                    <strong>{{ item.nama_tim }}</strong>
+                    <span class="registration-code">{{ item.kode_pendaftaran }}</span>
+                    <span>{{ item.event?.nama_event }}</span>
+                    <div v-for="detail in item.rincis" :key="detail.id" class="athletes">
+                      <span
+                        ><q-icon name="person" /> {{ detail.nama_atlet_satu }} &amp;
+                        {{ detail.nama_atlet_dua }}</span
+                      >
+                    </div>
                   </div>
+                  <q-badge
+                    color="blue-1"
+                    text-color="black"
+                    :label="labelStatus(item.status_pendaftaran)"
+                  />
                 </div>
-                <q-badge
-                  color="blue-1"
-                  text-color="primary"
-                  :label="labelStatus(item.status_pendaftaran)"
+                <q-btn
+                  flat
+                  no-caps
+                  class="detail-toggle"
+                  color="black"
+                  :icon="expandedId === item.id ? 'expand_less' : 'expand_more'"
+                  :label="expandedId === item.id ? 'Tutup rincian atlet' : 'Lihat rincian atlet'"
+                  @click="toggleDetail(item.id)"
                 />
-              </div>
-              <q-btn
-                flat
-                no-caps
-                class="detail-toggle"
-                color="primary"
-                :icon="expandedId === item.id ? 'expand_less' : 'expand_more'"
-                :label="expandedId === item.id ? 'Tutup rincian atlet' : 'Lihat rincian atlet'"
-                @click="toggleDetail(item.id)"
-              />
-              <q-slide-transition>
-                <section v-show="expandedId === item.id" class="detail-panel">
-                  <div
-                    v-for="detail in item.rincis"
-                    :key="`detail-${detail.id}`"
-                    class="athlete-detail-grid"
-                  >
-                    <div class="athlete-detail">
-                      <div class="athlete-title"><q-icon name="looks_one" /> Atlet 1</div>
-                      <strong>{{ detail.nama_atlet_satu }}</strong>
-                      <span>NIK: {{ detail.nik_atlet_satu || '-' }}</span>
-                      <span
-                        >Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_satu) }}</span
-                      >
-                      <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_satu) }}</span>
-                      <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_satu || '-' }}</span>
-                      <span>No. WhatsApp: {{ detail.no_hp_atlet_satu || '-' }}</span>
+                <div class="attendance-actions">
+                  <q-btn
+                    v-if="!item.hadir_technical_meeting"
+                    unelevated
+                    no-caps
+                    dense
+                    color="deep-purple-2"
+                    text-color="black"
+                    icon="groups"
+                    label="Hadir Technical Meeting"
+                    :loading="store.sedangMenandaiKehadiran(item.id, 'technical_meeting')"
+                    @click="store.tandaiKehadiran(item.id, 'technical_meeting')"
+                  />
+                  <q-badge v-else color="deep-purple-2" text-color="black" class="attendance-badge">
+                    <q-icon name="check_circle" size="15px" class="q-mr-xs" /> Hadir Technical
+                    Meeting
+                  </q-badge>
+                  <q-btn
+                    v-if="!item.hadir_registrasi_ulang"
+                    unelevated
+                    no-caps
+                    dense
+                    color="orange-2"
+                    text-color="black"
+                    icon="fact_check"
+                    label="Hadir Registrasi Ulang"
+                    :loading="store.sedangMenandaiKehadiran(item.id, 'registrasi_ulang')"
+                    @click="store.tandaiKehadiran(item.id, 'registrasi_ulang')"
+                  />
+                  <q-badge v-else color="orange-2" text-color="black" class="attendance-badge">
+                    <q-icon name="check_circle" size="15px" class="q-mr-xs" /> Hadir Registrasi
+                    Ulang
+                  </q-badge>
+                </div>
+                <q-slide-transition>
+                  <section v-show="expandedId === item.id" class="detail-panel">
+                    <div
+                      v-for="detail in item.rincis"
+                      :key="`detail-${detail.id}`"
+                      class="athlete-detail-grid"
+                    >
+                      <div class="athlete-detail">
+                        <div class="athlete-title"><q-icon name="looks_one" /> Atlet 1</div>
+                        <strong>{{ detail.nama_atlet_satu }}</strong>
+                        <span>NIK: {{ detail.nik_atlet_satu || '-' }}</span>
+                        <span
+                          >Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_satu) }}</span
+                        >
+                        <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_satu) }}</span>
+                        <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_satu || '-' }}</span>
+                        <span>No. WhatsApp: {{ detail.no_hp_atlet_satu || '-' }}</span>
+                      </div>
+                      <div class="athlete-detail">
+                        <div class="athlete-title"><q-icon name="looks_two" /> Atlet 2</div>
+                        <strong>{{ detail.nama_atlet_dua }}</strong>
+                        <span>NIK: {{ detail.nik_atlet_dua || '-' }}</span>
+                        <span
+                          >Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_dua) }}</span
+                        >
+                        <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_dua) }}</span>
+                        <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_dua || '-' }}</span>
+                        <span>No. WhatsApp: {{ detail.no_hp_atlet_dua || '-' }}</span>
+                      </div>
                     </div>
-                    <div class="athlete-detail">
-                      <div class="athlete-title"><q-icon name="looks_two" /> Atlet 2</div>
-                      <strong>{{ detail.nama_atlet_dua }}</strong>
-                      <span>NIK: {{ detail.nik_atlet_dua || '-' }}</span>
-                      <span
-                        >Tanggal lahir: {{ formatTanggal(detail.tanggal_lahir_atlet_dua) }}</span
-                      >
-                      <span>Umur: {{ hitungUmur(detail.tanggal_lahir_atlet_dua) }}</span>
-                      <span>Jenis kelamin: {{ detail.jenis_kelamin_atlet_dua || '-' }}</span>
-                      <span>No. WhatsApp: {{ detail.no_hp_atlet_dua || '-' }}</span>
-                    </div>
-                  </div>
-                </section>
-              </q-slide-transition>
-            </article>
-          </template>
-        </q-virtual-scroll>
+                  </section>
+                </q-slide-transition>
+              </article>
+            </template>
+          </q-virtual-scroll>
 
-        <div v-if="!store.loading && !store.items.length" class="empty-state">
-          Belum ada peserta event.
-        </div>
+          <div v-if="!store.loading && !store.items.length" class="empty-state">
+            Belum ada peserta event.
+          </div>
+
+          <q-inner-loading :showing="store.loading" color="primary">
+            <q-spinner-dots size="34px" />
+            <span class="loading-label">Memuat data peserta...</span>
+          </q-inner-loading>
+        </section>
       </section>
     </main>
   </q-page>
@@ -166,7 +219,9 @@ const searchDariNotifikasi = String(route.query.search || '').trim()
 store.params.search = searchDariNotifikasi
 
 onMounted(async () => {
-  await Promise.all([store.getEventOptions(), store.getData({ reset: true })])
+  await store.getEventOptions()
+  store.pilihEventAktif()
+  await store.getData({ reset: true })
 
   if (searchDariNotifikasi && store.items.length === 1) {
     expandedId.value = store.items[0].id
@@ -183,9 +238,16 @@ function cari() {
   }, 350)
 }
 
+async function hapusPencarian() {
+  window.clearTimeout(timer)
+  store.params.search = ''
+  expandedId.value = null
+  await store.getData({ reset: true })
+}
+
 function cetakPdf() {
   router.push({
-    path: '/event-peserta/cetak',
+    path: '/event-peserta/laporan',
     query: store.params.master_event_id ? { master_event_id: store.params.master_event_id } : {},
   })
 }
@@ -334,14 +396,14 @@ function loadMore({ index, to }) {
   gap: 3px;
 }
 .page-heading span {
-  color: #0753b6;
+  color: #000;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.6px;
 }
 .page-heading p {
   margin: 4px 0 0;
-  color: #74859b;
+  color: #000;
   font-size: 13px;
 }
 .list-card {
@@ -357,8 +419,22 @@ function loadMore({ index, to }) {
 .list-card > .q-select {
   margin: 0 13px 13px;
 }
+.list-card :deep(.q-field__label),
+.list-card :deep(.q-field__native),
+.list-card :deep(.q-field__input) {
+  color: #000;
+}
 .participant-card {
   border-top: 1px solid #edf1f5;
+}
+.participant-list-area {
+  position: relative;
+  min-height: 160px;
+}
+.loading-label {
+  margin-top: 8px;
+  color: #000;
+  font-size: 12px;
 }
 .participant-virtual-list {
   height: min(65vh, 680px);
@@ -380,23 +456,23 @@ function loadMore({ index, to }) {
   white-space: nowrap;
 }
 .participant-copy strong {
-  color: #213d63;
+  color: #000;
   font-size: 16px;
 }
 .participant-copy > span {
   margin-top: 4px;
-  color: #637b99;
+  color: #000;
   font-size: 12px;
 }
 .participant-copy .registration-code {
-  color: #0b5bbd;
+  color: #000;
   font-size: 11px;
   font-weight: 700;
 }
 .athletes span {
   display: block;
   margin-top: 7px;
-  color: #3b6188;
+  color: #000;
   font-size: 12px;
 }
 .athletes .q-icon {
@@ -411,6 +487,23 @@ function loadMore({ index, to }) {
   margin: 0 10px 8px 66px;
   font-size: 11px;
   font-weight: 700;
+}
+.attendance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 10px 10px 66px;
+}
+.attendance-actions .q-btn,
+.attendance-badge {
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.attendance-badge {
+  display: inline-flex;
+  align-items: center;
 }
 .detail-panel {
   margin: 0 14px 14px 66px;
@@ -431,23 +524,23 @@ function loadMore({ index, to }) {
   padding: 11px;
   border-radius: 8px;
   background: #fff;
-  color: #536f8f;
+  color: #000;
   font-size: 11px;
 }
 .athlete-detail strong {
   margin: 2px 0;
-  color: #174a81;
+  color: #000;
   font-size: 14px;
 }
 .athlete-title {
-  color: #0870d1;
+  color: #000;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
 }
 .empty-state {
   padding: 25px;
-  color: #8191a3;
+  color: #000;
   text-align: center;
   font-size: 12px;
 }
@@ -463,6 +556,9 @@ function loadMore({ index, to }) {
     height: 38px;
   }
   .detail-toggle {
+    margin-left: 52px;
+  }
+  .attendance-actions {
     margin-left: 52px;
   }
   .detail-panel {

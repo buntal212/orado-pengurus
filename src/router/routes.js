@@ -33,6 +33,10 @@ const routes = [
         component: () => import('@/pages/EventPeserta/PrintPage.vue'),
       },
       {
+        path: 'event-peserta/laporan',
+        component: () => import('@/pages/EventPeserta/ReportPrintPage.vue'),
+      },
+      {
         path: 'notifikasi',
         component: () => import('@/pages/Notifikasi/IndexPage.vue'),
       },

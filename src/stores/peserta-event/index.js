@@ -8,6 +8,7 @@ export const usePesertaEventStore = defineStore('peserta-event', {
     items: [],
     hasMore: true,
     eventOptions: [],
+    attendanceLoading: {},
     params: { page: 1, search: '', master_event_id: null },
   }),
   actions: {
@@ -49,5 +50,73 @@ export const usePesertaEventStore = defineStore('peserta-event', {
         })
       }
     },
+
+    pilihEventAktif() {
+      if (this.params.master_event_id || !this.eventOptions.length) return
+
+      const hariIni = tanggalLokal(new Date())
+      const eventAktif = this.eventOptions
+        .map((event) => ({ event, prioritas: prioritasEventAktif(event, hariIni) }))
+        .filter(({ prioritas }) => prioritas !== null)
+        .sort((a, b) => a.prioritas - b.prioritas)[0]?.event
+
+      this.params.master_event_id = eventAktif?.id ?? null
+    },
+
+    async tandaiKehadiran(participantId, jenis) {
+      const key = `${participantId}-${jenis}`
+      if (this.attendanceLoading[key]) return
+
+      this.attendanceLoading[key] = true
+      try {
+        const response = await api.post(`/v3/event/peserta/${participantId}/kehadiran`, { jenis })
+        const participant = this.items.find((item) => item.id === participantId)
+
+        if (participant) {
+          participant.hadir_technical_meeting = Boolean(
+            response.data?.data?.hadir_technical_meeting,
+          )
+          participant.hadir_registrasi_ulang = Boolean(response.data?.data?.hadir_registrasi_ulang)
+        }
+
+        Notify.create({
+          type: 'positive',
+          message: response.data?.message || 'Kehadiran berhasil dicatat.',
+        })
+      } catch (error) {
+        Notify.create({
+          type: 'negative',
+          message: error.response?.data?.message || 'Kehadiran tidak dapat dicatat.',
+        })
+      } finally {
+        this.attendanceLoading[key] = false
+      }
+    },
+
+    sedangMenandaiKehadiran(participantId, jenis) {
+      return Boolean(this.attendanceLoading[`${participantId}-${jenis}`])
+    },
   },
 })
+
+function prioritasEventAktif(event, hariIni) {
+  const status = String(event.status || '').toLowerCase()
+  const dibuka = ['dibuka', 'aktif', 'berjalan'].includes(status)
+  const mulai = event.tanggal_mulai || null
+  const selesai = event.tanggal_selesai || null
+  const sedangBerjalan = mulai && selesai && mulai <= hariIni && selesai >= hariIni
+  const belumSelesai = !selesai || selesai >= hariIni
+
+  if (dibuka && sedangBerjalan) return 0
+  if (dibuka && belumSelesai) return 1
+
+  return null
+}
+
+function tanggalLokal(tanggal) {
+  const tahun = tanggal.getFullYear()
+  const bulan = String(tanggal.getMonth() + 1).padStart(2, '0')
+  const hari = String(tanggal.getDate()).padStart(2, '0')
+
+  return `${tahun}-${bulan}-${hari}`
+}

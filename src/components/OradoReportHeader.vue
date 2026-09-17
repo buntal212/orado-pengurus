@@ -5,9 +5,19 @@
       <h1>ORADO KOTA PROBOLINGGO</h1>
       <h2>ORGANISASI OLAHRAGA DOMINO</h2>
       <p>Jl. Bengawan Solo No. 100, Jrebeng Kulon, Kedopok, Kota Probolinggo 67229</p>
+      <p v-if="telepon" class="letterhead-contact">Telp. {{ telepon }}</p>
     </div>
   </header>
 </template>
+
+<script setup>
+defineProps({
+  telepon: {
+    type: String,
+    default: '',
+  },
+})
+</script>
 
 <style scoped>
 .letterhead {
@@ -17,8 +27,8 @@
   justify-content: center;
   min-height: 88px;
   padding-bottom: 15px;
-  border-bottom: 4px double #071f42;
-  color: #071f42;
+  border-bottom: 4px double #000;
+  color: #000;
 }
 .letterhead > img {
   position: absolute;
@@ -50,11 +60,14 @@
 .letterhead p {
   max-width: 480px;
   margin: 2px auto 0;
-  color: #315b7c;
+  color: #000;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.35px;
   line-height: 1.2;
+}
+.letterhead .letterhead-contact {
+  margin-top: 0;
 }
 @media print {
   .letterhead {
