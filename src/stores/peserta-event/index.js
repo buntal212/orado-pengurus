@@ -2,14 +2,32 @@ import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from '@/boot/axios'
 
+const initialForm = () => ({
+  id: null,
+  kode_pendaftaran: '',
+  nama_tim: '',
+  nik_atlet_satu: '',
+  nama_atlet_satu: '',
+  tanggal_lahir_atlet_satu: '',
+  jenis_kelamin_atlet_satu: '',
+  no_hp_atlet_satu: '',
+  nik_atlet_dua: '',
+  nama_atlet_dua: '',
+  tanggal_lahir_atlet_dua: '',
+  jenis_kelamin_atlet_dua: '',
+  no_hp_atlet_dua: '',
+})
+
 export const usePesertaEventStore = defineStore('peserta-event', {
   state: () => ({
     loading: false,
+    saving: false,
     items: [],
     hasMore: true,
     eventOptions: [],
     attendanceLoading: {},
     params: { page: 1, search: '', master_event_id: null },
+    form: initialForm(),
   }),
   actions: {
     async getData({ reset = false } = {}) {
@@ -96,8 +114,57 @@ export const usePesertaEventStore = defineStore('peserta-event', {
     sedangMenandaiKehadiran(participantId, jenis) {
       return Boolean(this.attendanceLoading[`${participantId}-${jenis}`])
     },
+
+    editData(participant) {
+      const detail = participant.rincis?.[0] || {}
+      this.form = {
+        ...initialForm(),
+        ...detail,
+        id: participant.id,
+        kode_pendaftaran: participant.kode_pendaftaran,
+        nama_tim: participant.nama_tim,
+        tanggal_lahir_atlet_satu: toDate(detail.tanggal_lahir_atlet_satu),
+        tanggal_lahir_atlet_dua: toDate(detail.tanggal_lahir_atlet_dua),
+      }
+    },
+
+    resetForm() {
+      this.form = initialForm()
+    },
+
+    async saveData() {
+      if (!this.form.id) return false
+
+      this.saving = true
+      try {
+        const response = await api.post(`/v3/event/peserta/${this.form.id}/edit`, this.form)
+        const participant = response.data?.data
+        const index = this.items.findIndex((item) => item.id === participant?.id)
+
+        if (index !== -1) this.items[index] = participant
+        Notify.create({
+          type: 'positive',
+          message: response.data?.message || 'Data peserta event berhasil diperbarui.',
+        })
+        this.resetForm()
+        return true
+      } catch (error) {
+        const message =
+          Object.values(error.response?.data?.errors ?? {})?.[0]?.[0] ||
+          error.response?.data?.message ||
+          'Data peserta event gagal diperbarui.'
+        Notify.create({ type: 'negative', message })
+        return false
+      } finally {
+        this.saving = false
+      }
+    },
   },
 })
+
+function toDate(value) {
+  return value ? String(value).slice(0, 10) : ''
+}
 
 function prioritasEventAktif(event, hariIni) {
   const status = String(event.status || '').toLowerCase()

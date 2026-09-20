@@ -113,6 +113,15 @@
                   :label="expandedId === item.id ? 'Tutup rincian atlet' : 'Lihat rincian atlet'"
                   @click="toggleDetail(item.id)"
                 />
+                <q-btn
+                  flat
+                  no-caps
+                  class="edit-button"
+                  color="primary"
+                  icon="edit"
+                  label="Edit data peserta"
+                  @click="editPeserta(item)"
+                />
                 <div class="attendance-actions">
                   <q-btn
                     v-if="!item.hadir_technical_meeting"
@@ -194,6 +203,10 @@
         </section>
       </section>
     </main>
+
+    <q-dialog v-model="dialogEdit" @hide="store.resetForm()">
+      <FormPeserta @close="dialogEdit = false" @saved="dialogEdit = false" />
+    </q-dialog>
   </q-page>
 </template>
 
@@ -204,6 +217,7 @@ import { Notify } from 'quasar'
 import { utils, writeFile } from 'xlsx'
 import { api } from '@/boot/axios'
 import { usePesertaEventStore } from '@/stores/peserta-event'
+import FormPeserta from './comp/FormPeserta.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -212,6 +226,7 @@ let timer
 const expandedId = ref(null)
 const participantList = ref(null)
 const exporting = ref(false)
+const dialogEdit = ref(false)
 const searchDariNotifikasi = String(route.query.search || '').trim()
 
 // Isi filter lebih awal agar request pertama langsung memakai nomor registrasi
@@ -250,6 +265,11 @@ function cetakPdf() {
     path: '/event-peserta/laporan',
     query: store.params.master_event_id ? { master_event_id: store.params.master_event_id } : {},
   })
+}
+
+function editPeserta(item) {
+  store.editData(item)
+  dialogEdit.value = true
 }
 
 async function exportExcel() {
@@ -488,6 +508,12 @@ function loadMore({ index, to }) {
   font-size: 11px;
   font-weight: 700;
 }
+.edit-button {
+  min-height: 34px;
+  margin: 0 10px 8px 66px;
+  font-size: 11px;
+  font-weight: 700;
+}
 .attendance-actions {
   display: flex;
   flex-wrap: wrap;
@@ -556,6 +582,9 @@ function loadMore({ index, to }) {
     height: 38px;
   }
   .detail-toggle {
+    margin-left: 52px;
+  }
+  .edit-button {
     margin-left: 52px;
   }
   .attendance-actions {

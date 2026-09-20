@@ -63,14 +63,21 @@ export const useLoginStore = defineStore('login', {
       }
     },
 
-    async logout({ removePushToken = true } = {}) {
+    async logout({ removePushToken = true, immediate = false } = {}) {
       this.loading = true
+      const token =
+        localStorage.getItem('orado_pengurus_token') ||
+        sessionStorage.getItem('orado_pengurus_token')
+
+      if (immediate) this.clearSession()
 
       try {
         if (removePushToken) {
           await removePushNotificationToken()
         }
-        await api.post('/v1/auth/logout')
+        await api.post('/v1/auth/logout', null, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
       } catch (error) {
         console.error(error)
       } finally {
@@ -84,6 +91,7 @@ export const useLoginStore = defineStore('login', {
       sessionStorage.removeItem('orado_pengurus_token')
       localStorage.removeItem('orado_pengurus_user')
       sessionStorage.removeItem('orado_pengurus_user')
+      localStorage.removeItem('orado_pengurus_last_activity')
       this.user = null
     },
   },
