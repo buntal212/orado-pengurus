@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="app-shell">
+  <q-layout view="lHh Lpr lFf" :class="['app-shell', { 'app-shell--bagan': isHalamanBagan }]">
     <q-header class="app-header">
       <q-toolbar class="sso-toolbar">
         <q-avatar size="30px" class="header-logo">
@@ -150,6 +150,42 @@ function waktuNotifikasi(value) {
 .app-header {
   color: #fff;
   background: #002451;
+}
+.app-shell--bagan .app-header {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid #eab52c;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0 6%,
+      rgba(234, 181, 44, 0.95) 6% 7.4%,
+      transparent 7.4% 88%,
+      rgba(8, 43, 91, 0.68) 88%
+    ),
+    linear-gradient(135deg, #042e62 0%, #07549a 50%, #052f63 100%);
+}
+.app-shell--bagan .sso-toolbar {
+  position: relative;
+  z-index: 1;
+  max-width: none;
+  justify-content: center;
+}
+.app-shell--bagan .header-logo {
+  position: absolute;
+  left: calc(50% - 184px);
+  background: transparent;
+}
+.app-shell--bagan :deep(.q-toolbar__title) {
+  flex: none;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.35px;
+}
+.app-shell--bagan :deep(.sso-toolbar > .q-btn) {
+  position: absolute;
+  right: 22px;
 }
 .sso-toolbar {
   width: 100%;

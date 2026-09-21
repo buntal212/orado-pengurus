@@ -68,9 +68,12 @@
               class="event-identity"
               :style="{ left: `${bagan.identitasEventX}px`, top: `${bagan.identitasEventY}px` }"
             >
-              <span>BAGAN TURNAMEN</span>
+              <span>BAGAN <em>TURNAMEN</em></span>
               <strong>{{ store.event?.nama_event || 'EVENT ORADO' }}</strong>
-              <small>{{ store.event?.kode_event || 'ORADO Kota Probolinggo' }}</small>
+              <small>
+                <q-icon name="calendar_month" size="16px" />
+                {{ store.event?.kode_event || 'ORADO Kota Probolinggo' }}
+              </small>
             </div>
             <svg
               class="bracket-lines"
@@ -153,9 +156,11 @@
 
             <div
               class="champion-mark"
-              :style="{ left: `${bagan.final.x - 29}px`, top: `${bagan.hasilAkhirY}px` }"
+              :style="{ left: `${bagan.final.x - 54}px`, top: `${bagan.hasilAkhirY}px` }"
             >
-              <q-icon name="emoji_events" size="34px" />
+              <div class="champion-trophy">
+                <img src="@/assets/orado/trophy-gold-laurel-clean.png" alt="Piala juara" />
+              </div>
               <div class="champion-title">HASIL AKHIR</div>
               <div class="champion-result">
                 <div class="champion-result-row">
@@ -175,15 +180,16 @@
           </div>
         </div>
       </section>
-      <div
-        v-if="!store.loadingBagan && !store.loadingPengisian && bagan"
-        class="bracket-ticker"
-        aria-label="Pesan semangat pertandingan"
-      >
-        <span>
-          Selamat Bertanding, Junjung Sportifitas ...... #DominoNaikKelas #OradoMemintarkanIndonesia #OradoProbolinggoOdikTerus
-        </span>
-      </div>
+      <footer v-if="!store.loadingBagan && !store.loadingPengisian && bagan" class="bracket-footer">
+        <div class="bracket-footer-message">
+          <q-icon name="emoji_events" size="21px" />
+          <strong>Selamat Bertanding, Junjung Sportifitas</strong>
+        </div>
+        <div class="bracket-footer-tags">
+          #DominoNaikKelas&nbsp;&nbsp; #OradoMemintarkanIndonesia&nbsp;&nbsp;
+          #OradoProbolinggoOdikTerus
+        </div>
+      </footer>
 
       <div v-else-if="!store.loadingBagan && !store.loadingPengisian" class="empty-state">
         Event ini belum memiliki kuota peserta. Tentukan kuota peserta terlebih dahulu agar bagan
@@ -207,7 +213,7 @@
               emit-value
               map-options
               :disable="!bisaAturTim"
-              :options="opsiTim"
+              :options="opsiTimUntuk('tim_satu_id')"
               option-value="id"
               option-label="nama_tim"
               label="Tim/Club A"
@@ -220,7 +226,7 @@
               emit-value
               map-options
               :disable="!bisaAturTim"
-              :options="opsiTim"
+              :options="opsiTimUntuk('tim_dua_id')"
               option-value="id"
               option-label="nama_tim"
               label="Tim/Club B"
@@ -260,7 +266,7 @@ const JARAK_RONDE = 38
 const JARAK_BARIS = 56
 const PADDING = 16
 const JARAK_FINAL = 48
-const TINGGI_AREA_BAGAN = 88
+const TINGGI_AREA_BAGAN = 116
 
 const route = useRoute()
 const router = useRouter()
@@ -283,14 +289,14 @@ const ruangTombolKanan = computed(() => {
 
   return Math.min(ruangMaksimum, Math.max(ruangMinimum, lebarViewport.value * 0.18))
 })
-const opsiTim = computed(() =>
+const semuaOpsiTim = computed(() =>
   store.peserta.map((peserta) => ({ id: peserta.id, nama_tim: peserta.nama_tim })),
 )
 const opsiPemenang = computed(() => {
   if (!pasanganAktif.value) return []
 
   const idTim = [pasanganAktif.value.tim_satu_id, pasanganAktif.value.tim_dua_id].filter(Boolean)
-  return opsiTim.value.filter((tim) => idTim.includes(tim.id))
+  return semuaOpsiTim.value.filter((tim) => idTim.includes(tim.id))
 })
 const bisaAturTim = computed(() => pertandinganAktif.value?.ronde === 0)
 const keteranganPengisian = computed(() =>
@@ -298,6 +304,15 @@ const keteranganPengisian = computed(() =>
     ? 'Pilih dua Tim/Club, lalu tentukan pemenangnya.'
     : 'Tim masuk otomatis dari pemenang pertandingan sebelumnya. Tentukan pemenangnya.',
 )
+
+function opsiTimUntuk(slot) {
+  const idTimAktif = pasanganAktif.value?.[slot]
+  const idTimTerpakai = new Set(
+    store.formPasangan.flatMap((pasangan) => [pasangan.tim_satu_id, pasangan.tim_dua_id]),
+  )
+
+  return semuaOpsiTim.value.filter((tim) => tim.id === idTimAktif || !idTimTerpakai.has(tim.id))
+}
 
 const timTerdaftar = computed(() => {
   const daftarTim = new Map()
@@ -584,6 +599,9 @@ function buatBagan(daftarTim, kuotaEvent, jarakBaris, daftarPasangan, gunakanSus
     ? [final.timSatu, final.timDua].find((tim) => tim.id !== final.pemenang.id) || null
     : null
 
+  const identitasEventY = Math.max(PADDING + 12, final.y - 390)
+  const hasilAkhirY = Math.max(identitasEventY + 160, final.y - 230)
+
   return {
     kuota,
     kuotaKiri,
@@ -593,9 +611,9 @@ function buatBagan(daftarTim, kuotaEvent, jarakBaris, daftarPasangan, gunakanSus
     pertandingan,
     final,
     juaraTiga,
-    hasilAkhirY: Math.max(PADDING, final.y - 156),
-    identitasEventX: final.x + LEBAR_KARTU / 2 - 180,
-    identitasEventY: Math.max(PADDING + 12, final.y - 290),
+    hasilAkhirY,
+    identitasEventX: final.x + LEBAR_KARTU / 2 - 220,
+    identitasEventY,
     watermarkX: lebar / 2 - 260,
     watermarkY: tinggi / 2 - 260,
     jalur: buatJalur(pertandingan, jumlahRonde, final),
@@ -708,21 +726,35 @@ function namaRonde(jumlahMatch) {
 
 <style scoped>
 .bracket-page {
+  position: fixed;
+  top: 58px;
+  right: 0;
+  left: 0;
+  z-index: 1;
   height: calc(100vh - 58px);
+  width: 100%;
   min-height: 0;
   overflow: hidden;
   padding: 0;
   background:
-    radial-gradient(circle at 50% -20%, rgba(49, 122, 190, 0.12), transparent 38%),
-    linear-gradient(135deg, #eef5fb 0%, #f9fbfe 48%, #edf4fa 100%);
+    radial-gradient(circle at 50% 38%, rgba(44, 119, 191, 0.08), transparent 30%),
+    linear-gradient(
+      135deg,
+      rgba(34, 117, 195, 0.1) 0 7%,
+      transparent 7% 49%,
+      rgba(34, 117, 195, 0.05) 49% 57%,
+      transparent 57%
+    ),
+    linear-gradient(135deg, #eaf4ff 0%, #fff 30%, #f8fbff 70%, #e7f2ff 100%);
 }
 .bracket-content {
   display: flex;
   height: 100%;
   min-height: 0;
   flex-direction: column;
+  justify-content: flex-start;
   width: 100%;
-  margin: auto;
+  margin: 0 auto;
 }
 .back-button {
   position: absolute;
@@ -764,57 +796,80 @@ function namaRonde(jumlahMatch) {
 .bracket-board,
 .empty-state {
   overflow: hidden;
-  border: 1px solid #cbddeb;
-  border-radius: 18px 18px 0 0;
+  border: 1px solid #b9d8f2;
+  border-radius: 0;
   background: #fff;
-  box-shadow: 0 12px 30px rgba(27, 57, 96, 0.12);
+  box-shadow: 0 14px 34px rgba(24, 73, 128, 0.16);
 }
 .empty-state {
   border-radius: 18px;
 }
-.bracket-ticker {
-  display: flex;
-  height: 28px;
+.bracket-footer {
+  position: relative;
+  display: grid;
+  height: 56px;
   flex: none;
-  align-items: center;
+  align-content: center;
+  justify-items: center;
   overflow: hidden;
-  padding: 0 12px;
-  box-sizing: border-box;
-  border: 1px solid #cbddeb;
-  border-top: 0;
-  border-radius: 0 0 18px 18px;
-  background: #fff;
-  color: #000;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  background:
+    linear-gradient(135deg, transparent 0 89%, #efbe2d 89% 92%, transparent 92%),
+    linear-gradient(
+      135deg,
+      rgba(16, 96, 174, 0.4) 0 12%,
+      transparent 12% 24%,
+      rgba(16, 96, 174, 0.23) 24% 36%,
+      transparent 36%
+    ),
+    linear-gradient(135deg, #032c5c, #064d91 52%, #032a58);
+  color: #fff;
+  text-align: center;
+}
+.bracket-footer::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 110px;
+  background: linear-gradient(135deg, rgba(0, 20, 50, 0.36) 0 42%, transparent 42%);
+  content: '';
+}
+.bracket-footer-message,
+.bracket-footer-tags {
+  position: relative;
+  z-index: 1;
+}
+.bracket-footer-message {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  box-shadow: 0 12px 30px rgba(27, 57, 96, 0.12);
-  white-space: nowrap;
+  line-height: 1.2;
 }
-.bracket-ticker span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: bracket-ticker 32s linear infinite;
+.bracket-footer-message :deep(.q-icon) {
+  color: #f5bf2f;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.28));
 }
-@keyframes bracket-ticker {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+.bracket-footer-tags {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15px;
 }
 .bracket-viewport {
   position: relative;
   overflow: hidden;
   transition: height 0.2s ease;
-  background-color: #fafdff;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)),
-    radial-gradient(#cbd8e5 0.7px, transparent 0.7px);
-  background-size:
-    auto,
-    16px 16px;
+  background-color: #172738;
+  background-image: linear-gradient(
+    135deg,
+    rgba(81, 171, 244, 0.16) 0 7%,
+    transparent 7% 48%,
+    rgba(81, 171, 244, 0.08) 48% 58%,
+    transparent 58%
+  );
 }
 .bracket-canvas {
   position: relative;
@@ -826,40 +881,53 @@ function namaRonde(jumlahMatch) {
   z-index: 0;
   width: 520px;
   height: 520px;
-  opacity: 0.05;
-  filter: invert(1);
+  opacity: 0.1;
+  filter: brightness(0) invert(1);
   pointer-events: none;
 }
 .event-identity {
   position: absolute;
   z-index: 2;
   display: grid;
-  width: 360px;
+  width: 440px;
   justify-items: center;
-  padding: 10px 16px;
+  padding: 15px 24px;
   box-sizing: border-box;
-  border: 1px solid #bbcee0;
-  border-top: 3px solid #163a5e;
-  border-bottom: 3px solid #163a5e;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 8px 20px rgba(32, 68, 107, 0.1);
-  color: #000;
+  border: 2px solid #f0be2f;
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0 16%,
+      rgba(30, 113, 192, 0.2) 16% 28%,
+      transparent 28% 77%,
+      rgba(30, 113, 192, 0.18) 77%
+    ),
+    linear-gradient(135deg, #04366f, #0759a5 55%, #043165);
+  box-shadow:
+    0 10px 22px rgba(9, 61, 116, 0.25),
+    inset 0 1px rgba(255, 255, 255, 0.25);
+  color: #fff;
   pointer-events: none;
   text-align: center;
 }
 .event-identity span {
-  font-size: 9px;
+  color: #fff;
+  font-size: 11px;
   font-weight: 900;
-  letter-spacing: 2.4px;
+  letter-spacing: 3px;
+}
+.event-identity span em {
+  color: #f4c33b;
+  font-style: normal;
 }
 .event-identity strong {
   display: -webkit-box;
   max-width: 100%;
-  margin: 4px 0;
+  margin: 6px 0 7px;
   overflow: hidden;
-  color: #000;
-  font-size: 22px;
+  color: #fff;
+  font-size: 29px;
   font-weight: 900;
   letter-spacing: -0.4px;
   line-height: 1.08;
@@ -867,10 +935,13 @@ function namaRonde(jumlahMatch) {
   -webkit-line-clamp: 2;
 }
 .event-identity small {
-  color: #000;
-  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5f2ff;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
 }
 .bracket-lines {
   position: absolute;
@@ -879,8 +950,8 @@ function namaRonde(jumlahMatch) {
 }
 .bracket-lines path {
   fill: none;
-  stroke: #71869b;
-  stroke-width: 1.5;
+  stroke: #58abef;
+  stroke-width: 1.8;
 }
 .match-card {
   position: absolute;
@@ -895,8 +966,12 @@ function namaRonde(jumlahMatch) {
   width: 142px;
 }
 .third-place-label {
-  margin-bottom: 3px;
-  color: #000;
+  width: max-content;
+  margin: 0 auto 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #07569f;
+  color: #fff;
   font-size: 8px;
   font-weight: 900;
   line-height: 1;
@@ -904,7 +979,7 @@ function namaRonde(jumlahMatch) {
 }
 .third-place-result {
   margin-bottom: 3px;
-  color: #000;
+  color: #07569f;
   font-size: 8px;
   font-weight: 900;
   line-height: 1;
@@ -918,7 +993,7 @@ function namaRonde(jumlahMatch) {
   cursor: pointer;
 }
 .match-card--clickable .team-slot {
-  border-color: #4786b8;
+  border-color: #d04444;
 }
 .match-card--clickable:hover .team-slot:not(.team-slot--kosong) {
   filter: brightness(0.96);
@@ -933,22 +1008,22 @@ function namaRonde(jumlahMatch) {
   gap: 4px;
   padding: 2px 6px;
   margin-bottom: 2px;
-  border: 1px solid #4786b8;
-  border-radius: 6px;
-  background: #e7f3ff;
-  box-shadow: 0 3px 8px rgba(24, 47, 70, 0.13);
-  color: #163a59;
+  border: 1px solid #d04444;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #fff7f7, #ffd1d1);
+  box-shadow: 0 4px 10px rgba(157, 42, 42, 0.22);
+  color: #861f1f;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 700;
 }
 .match-card--final .team-slot {
-  border-color: #000;
-  background: #fff4ca;
+  border-color: #e4a81e;
+  background: linear-gradient(180deg, #fffdf5, #ffefbd);
 }
 .team-slot + .team-slot:not(.team-slot--kosong) {
-  border-color: #9270bc;
-  background: #f2ebff;
-  color: #543a75;
+  border-color: #d6a313;
+  background: linear-gradient(180deg, #fffbed, #ffe49a);
+  color: #765508;
 }
 .team-slot span {
   overflow: hidden;
@@ -956,52 +1031,87 @@ function namaRonde(jumlahMatch) {
   white-space: nowrap;
 }
 .team-slot--kosong {
-  border-color: #aab4be !important;
-  background: #f1f3f5 !important;
-  color: #697582 !important;
+  border-color: #b4c8dc !important;
+  background: linear-gradient(180deg, #fafdff, #eaf2fa) !important;
+  color: #54708d !important;
   font-style: italic;
   font-weight: 500;
 }
 .champion-mark {
   position: absolute;
   display: flex;
-  width: 200px;
+  width: 250px;
   flex-direction: column;
   align-items: center;
   justify-items: center;
-  color: #000;
+  color: #0a4f94;
+}
+.champion-trophy {
+  position: relative;
+  display: grid;
+  width: 136px;
+  height: 82px;
+  place-items: center;
+}
+.champion-trophy img {
+  display: block;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 4px rgba(128, 83, 0, 0.28));
+  transform: translateY(-42px);
 }
 .champion-title {
-  margin: 2px 0 5px;
-  font-size: 10px;
+  margin: 0 0 8px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #063c76, #0a69b8);
+  box-shadow: 0 4px 8px rgba(12, 72, 129, 0.18);
+  color: #fff;
+  font-size: 12px;
   font-weight: 900;
+  letter-spacing: 0.3px;
   text-align: center;
 }
 .champion-result {
   width: 100%;
   overflow: hidden;
-  border: 1px solid #a76b00;
-  border-radius: 7px;
-  background: #fff7e4;
-  box-shadow: 0 5px 12px rgba(117, 85, 23, 0.12);
+  border: 1px solid #e5a820;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fffdf4, #fff0c9);
+  box-shadow: 0 7px 14px rgba(117, 85, 23, 0.16);
 }
 .champion-result-row {
   display: grid;
-  grid-template-columns: 62px 1fr;
-  gap: 5px;
-  padding: 4px 7px;
-  font-size: 10px;
+  grid-template-columns: 80px 1fr;
+  gap: 7px;
+  align-items: center;
+  padding: 5px 9px;
+  font-size: 11px;
   line-height: 1.15;
 }
 .champion-result-row + .champion-result-row {
-  border-top: 1px solid #e0c58f;
+  border-top: 1px solid #ecd69e;
 }
 .champion-result-row span {
+  padding: 4px 5px;
+  border-radius: 5px;
+  background: #e0e6eb;
+  color: #173d65;
   font-weight: 900;
+  text-align: center;
+}
+.champion-result-row:first-child span {
+  background: #f1bd2b;
+  color: #1f2c3a;
+}
+.champion-result-row:last-child span {
+  background: #d88943;
+  color: #fff;
 }
 .champion-result-row strong {
   overflow: hidden;
-  font-size: 10px;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
