@@ -97,7 +97,7 @@ const menus = [
   { title: 'Data Club', icon: 'admin_panel_settings', to: '/club' },
   { title: 'Data Event', icon: 'event', to: '/event' },
   { title: 'Data Peserta\nEvent', icon: 'groups', to: '/event-peserta' },
-  { title: 'Keuangan', icon: 'account_balance_wallet' },
+  { title: 'Bracket\nTurnamen', icon: 'account_tree', to: '/bracket-turnamen' },
   { title: 'Pemasukan', icon: 'south' },
   { title: 'Pengeluaran', icon: 'north' },
   { title: 'Laporan &\nAnalitik', icon: 'description' },

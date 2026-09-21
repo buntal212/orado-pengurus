@@ -37,6 +37,18 @@ const routes = [
         component: () => import('@/pages/EventPeserta/ReportPrintPage.vue'),
       },
       {
+        path: 'bracket-turnamen',
+        component: () => import('@/pages/BracketTurnamen/IndexPage.vue'),
+      },
+      {
+        path: 'bracket-turnamen/:eventId',
+        component: () => import('@/pages/BracketTurnamen/BaganPage.vue'),
+      },
+      {
+        path: 'bracket-turnamen/:eventId/isi',
+        component: () => import('@/pages/BracketTurnamen/PengisianBaganPage.vue'),
+      },
+      {
         path: 'notifikasi',
         component: () => import('@/pages/Notifikasi/IndexPage.vue'),
       },

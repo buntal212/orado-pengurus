@@ -76,7 +76,7 @@
       </q-toolbar>
     </q-header>
     <q-page-container><router-view /></q-page-container>
-    <q-footer class="bottom-nav">
+    <q-footer v-if="!isHalamanBagan" class="bottom-nav">
       <nav aria-label="Navigasi utama">
         <button
           type="button"
@@ -113,6 +113,7 @@ const notifikasi = useNotifikasiStore()
 const badgeLabel = computed(() =>
   notifikasi.jumlahBelumDibaca > 99 ? '99+' : notifikasi.jumlahBelumDibaca,
 )
+const isHalamanBagan = computed(() => /^\/bracket-turnamen\/[^/]+$/.test(route.path))
 
 let notificationInterval
 
