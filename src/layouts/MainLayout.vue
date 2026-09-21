@@ -2,10 +2,12 @@
   <q-layout view="lHh Lpr lFf" :class="['app-shell', { 'app-shell--bagan': isHalamanBagan }]">
     <q-header class="app-header">
       <q-toolbar class="sso-toolbar">
-        <q-avatar size="30px" class="header-logo">
-          <img src="@/assets/orado/logo-white.svg" alt="ORADO" />
-        </q-avatar>
-        <q-toolbar-title>ORADO Kota Probolinggo</q-toolbar-title>
+        <div class="header-brand">
+          <q-avatar size="30px" class="header-logo">
+            <img src="@/assets/orado/logo-white.svg" alt="ORADO" />
+          </q-avatar>
+          <q-toolbar-title>ORADO Kota Probolinggo</q-toolbar-title>
+        </div>
 
         <q-btn flat round dense icon="notifications_none" aria-label="Notifikasi">
           <q-badge
@@ -171,15 +173,27 @@ function waktuNotifikasi(value) {
   max-width: none;
   justify-content: center;
 }
+.app-shell--bagan .header-brand {
+  display: flex;
+  max-width: calc(100vw - 116px);
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
 .app-shell--bagan .header-logo {
-  position: absolute;
-  left: calc(50% - 184px);
   background: transparent;
+  width: 50px !important;
+  height: 50px !important;
+  font-size: 50px !important;
+}
+.app-shell--bagan .header-logo img {
+  width: 43px;
+  height: 43px;
 }
 .app-shell--bagan :deep(.q-toolbar__title) {
   flex: none;
   padding: 0;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 800;
   letter-spacing: 0.35px;
 }
@@ -193,6 +207,12 @@ function waktuNotifikasi(value) {
   min-height: 58px;
   margin: 0 auto;
   padding: 0 10px;
+}
+.header-brand {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
 }
 .q-toolbar-title {
   padding-left: 6px;
