@@ -181,7 +181,7 @@
         aria-label="Pesan semangat pertandingan"
       >
         <span>
-          Selamat Bertanding, Junjung Sportifitas ...... #DominoNaikKelas #OradoMenencerdaskanIndonesia #OradoProbolinggoOdikTerus
+          Selamat Bertanding, Junjung Sportifitas ...... #DominoNaikKelas #OradoMemintarkanIndonesia #OradoProbolinggoOdikTerus
         </span>
       </div>
 
