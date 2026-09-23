@@ -89,8 +89,8 @@
         </button>
         <button
           type="button"
-          :class="['nav-item', { 'nav-item--active': route.path === '/pengaturan' }]"
-          @click="router.push('/pengaturan')"
+          :class="['nav-item', { 'nav-item--active': route.path === '/akun' }]"
+          @click="router.push('/akun')"
         >
           <q-icon name="person_outline" /><span>Akun</span>
         </button>

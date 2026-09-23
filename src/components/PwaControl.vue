@@ -66,7 +66,14 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+const props = defineProps({
+  allowInstallPrompt: {
+    type: Boolean,
+    default: false,
+  },
+})
 
 const installDialog = ref(false)
 const canInstall = ref(Boolean(window.__oradoInstallPrompt))
@@ -122,14 +129,14 @@ function showUpdate(event) {
 }
 
 function installReady() {
-  if (isInstalled()) return
+  if (!props.allowInstallPrompt || isInstalled()) return
   canInstall.value = true
   installDialog.value = true
 }
 
 onMounted(() => {
   if (isInstalled()) markInstalled()
-  else if (canInstall.value || isIos) {
+  else if (props.allowInstallPrompt && (canInstall.value || isIos)) {
     window.setTimeout(() => {
       installDialog.value = true
     }, 600)
@@ -138,6 +145,18 @@ onMounted(() => {
   window.addEventListener('orado:pwa-installed', markInstalled)
   window.addEventListener('orado:pwa-update-available', showUpdate)
 })
+
+watch(
+  () => props.allowInstallPrompt,
+  (diizinkan) => {
+    if (!diizinkan) {
+      installDialog.value = false
+      return
+    }
+
+    if (!isInstalled() && (canInstall.value || isIos)) installDialog.value = true
+  },
+)
 
 onBeforeUnmount(() => {
   window.removeEventListener('orado:pwa-install-ready', installReady)

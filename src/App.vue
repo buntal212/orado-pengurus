@@ -1,11 +1,14 @@
 <template>
   <router-view />
-  <PwaControl />
+  <PwaControl :allow-install-prompt="route.path === '/login'" />
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import PwaControl from '@/components/PwaControl.vue'
+
+const route = useRoute()
 
 onMounted(() => {
   const splash = document.getElementById('orado-splash')

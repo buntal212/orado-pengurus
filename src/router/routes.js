@@ -64,6 +64,10 @@ const routes = [
         path: 'pengaturan',
         component: () => import('@/pages/Pengaturan/IndexPage.vue'),
       },
+      {
+        path: 'akun',
+        component: () => import('@/pages/Akun/IndexPage.vue'),
+      },
     ],
   },
   {
