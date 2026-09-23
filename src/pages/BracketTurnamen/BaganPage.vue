@@ -30,6 +30,18 @@
         @click="simpanBagan"
       />
       <q-btn
+        class="download-pdf-button"
+        round
+        flat
+        icon="picture_as_pdf"
+        color="black"
+        aria-label="Unduh bagan sebagai PDF"
+        :loading="sedangMengunduhPdf"
+        @click="cetakBaganPdf"
+      >
+        <q-tooltip>Unduh PDF</q-tooltip>
+      </q-btn>
+      <q-btn
         class="back-button"
         round
         flat
@@ -47,9 +59,15 @@
         <div
           ref="bracketViewport"
           class="bracket-viewport"
-          :style="{ height: `${tinggiBaganTampil}px` }"
+          :style="{
+            height: `${tinggiBaganTampil}px`,
+            '--skala-cetak': skalaCetakBagan,
+            '--lebar-cetak': `${bagan.lebar * skalaCetakBagan}px`,
+            '--tinggi-cetak': `${bagan.tinggi * skalaCetakBagan}px`,
+          }"
         >
           <div
+            ref="bracketCanvas"
             class="bracket-canvas"
             :style="{
               width: `${bagan.lebar}px`,
@@ -212,11 +230,14 @@
               clearable
               emit-value
               map-options
+              use-input
+              input-debounce="0"
               :disable="!bisaAturTim"
               :options="opsiTimUntuk('tim_satu_id')"
               option-value="id"
               option-label="nama_tim"
               label="Tim/Club A"
+              @filter="(nilai, perbarui) => saringOpsiTim(nilai, 'tim_satu_id', perbarui)"
               @update:model-value="pastikanPemenangValid"
             />
             <q-select
@@ -225,11 +246,14 @@
               clearable
               emit-value
               map-options
+              use-input
+              input-debounce="0"
               :disable="!bisaAturTim"
               :options="opsiTimUntuk('tim_dua_id')"
               option-value="id"
               option-label="nama_tim"
               label="Tim/Club B"
+              @filter="(nilai, perbarui) => saringOpsiTim(nilai, 'tim_dua_id', perbarui)"
               @update:model-value="pastikanPemenangValid"
             />
             <q-select
@@ -258,6 +282,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Notify } from 'quasar'
 import { useBracketTurnamenStore } from '@/stores/bracket-turnamen'
 
 const LEBAR_KARTU = 142
@@ -272,12 +297,15 @@ const route = useRoute()
 const router = useRouter()
 const store = useBracketTurnamenStore()
 const bracketViewport = ref(null)
+const bracketCanvas = ref(null)
 const lebarViewport = ref(0)
 const tinggiLayar = ref(window.innerHeight)
 const dialogPertandingan = ref(false)
 const pasanganAktif = ref(null)
 const pertandinganAktif = ref(null)
 const tampilkanTombolSimpan = ref(false)
+const sedangMengunduhPdf = ref(false)
+const kataKunciTim = ref({ tim_satu_id: '', tim_dua_id: '' })
 let resizeObserver
 
 const modePengisian = computed(() => route.query.isi === '1')
@@ -310,8 +338,19 @@ function opsiTimUntuk(slot) {
   const idTimTerpakai = new Set(
     store.formPasangan.flatMap((pasangan) => [pasangan.tim_satu_id, pasangan.tim_dua_id]),
   )
+  const kataKunci = kataKunciTim.value[slot].trim().toLowerCase()
 
-  return semuaOpsiTim.value.filter((tim) => tim.id === idTimAktif || !idTimTerpakai.has(tim.id))
+  return semuaOpsiTim.value.filter(
+    (tim) =>
+      (tim.id === idTimAktif || !idTimTerpakai.has(tim.id)) &&
+      tim.nama_tim.toLowerCase().includes(kataKunci),
+  )
+}
+
+function saringOpsiTim(nilai, slot, perbarui) {
+  perbarui(() => {
+    kataKunciTim.value[slot] = nilai || ''
+  })
 }
 
 const timTerdaftar = computed(() => {
@@ -390,6 +429,11 @@ const offsetKiriBagan = computed(() => {
   )
 })
 const tinggiBaganTampil = computed(() => (bagan.value ? bagan.value.tinggi * skalaBagan.value : 0))
+const skalaCetakBagan = computed(() => {
+  if (!bagan.value) return 1
+
+  return Math.min(2.2, 3000 / bagan.value.lebar, 2100 / bagan.value.tinggi)
+})
 
 onMounted(async () => {
   window.addEventListener('resize', perbaruiTinggiLayar)
@@ -442,6 +486,83 @@ async function simpanBagan() {
   sinkronkanBaganOtomatis()
   const tersimpan = await store.savePengisian(route.params.eventId)
   if (tersimpan) router.replace(`/bracket-turnamen/${route.params.eventId}`)
+}
+
+async function cetakBaganPdf() {
+  if (!bagan.value || !bracketViewport.value || !bracketCanvas.value) return
+
+  sedangMengunduhPdf.value = true
+  await nextTick()
+
+  const viewport = bracketViewport.value
+  const canvasBagan = bracketCanvas.value
+  const gayaViewport = {
+    width: viewport.style.width,
+    height: viewport.style.height,
+    overflow: viewport.style.overflow,
+  }
+  const gayaCanvas = {
+    transform: canvasBagan.style.transform,
+    transformOrigin: canvasBagan.style.transformOrigin,
+  }
+
+  try {
+    viewport.style.width = `${bagan.value.lebar}px`
+    viewport.style.height = `${bagan.value.tinggi}px`
+    viewport.style.overflow = 'visible'
+    canvasBagan.style.transform = 'none'
+    canvasBagan.style.transformOrigin = 'top left'
+
+    await document.fonts?.ready
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ])
+    const gambarBagan = await html2canvas(viewport, {
+      backgroundColor: '#172738',
+      scale: 2,
+      useCORS: true,
+    })
+    const pdf = new jsPDF({ format: 'a1', orientation: 'landscape', unit: 'mm' })
+    const margin = 10
+    const lebarHalaman = pdf.internal.pageSize.getWidth() - margin * 2
+    const tinggiHalaman = pdf.internal.pageSize.getHeight() - margin * 2
+    const rasioBagan = gambarBagan.width / gambarBagan.height
+    let lebarGambar = lebarHalaman
+    let tinggiGambar = lebarGambar / rasioBagan
+
+    if (tinggiGambar > tinggiHalaman) {
+      tinggiGambar = tinggiHalaman
+      lebarGambar = tinggiGambar * rasioBagan
+    }
+
+    pdf.addImage(
+      gambarBagan,
+      'PNG',
+      (pdf.internal.pageSize.getWidth() - lebarGambar) / 2,
+      (pdf.internal.pageSize.getHeight() - tinggiGambar) / 2,
+      lebarGambar,
+      tinggiGambar,
+      undefined,
+      'FAST',
+    )
+    const namaEvent = (store.event?.nama_event || 'bagan-turnamen')
+      .trim()
+      .replace(/[^a-z0-9]+/gi, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase()
+    pdf.save(`${namaEvent || 'bagan-turnamen'}.pdf`)
+  } catch (error) {
+    console.error('Gagal membuat PDF bagan:', error)
+    Notify.create({ type: 'negative', message: 'PDF bagan gagal dibuat. Silakan coba lagi.' })
+  } finally {
+    viewport.style.width = gayaViewport.width
+    viewport.style.height = gayaViewport.height
+    viewport.style.overflow = gayaViewport.overflow
+    canvasBagan.style.transform = gayaCanvas.transform
+    canvasBagan.style.transformOrigin = gayaCanvas.transformOrigin
+    sedangMengunduhPdf.value = false
+  }
 }
 
 function sinkronkanBaganOtomatis() {
@@ -766,6 +887,16 @@ function namaRonde(jumlahMatch) {
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 12px rgba(27, 57, 96, 0.12);
 }
+.download-pdf-button {
+  position: absolute;
+  z-index: 3;
+  top: 4px;
+  right: 48px;
+  border: 1px solid rgba(179, 197, 215, 0.8);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px rgba(27, 57, 96, 0.12);
+}
 .save-button {
   position: absolute;
   z-index: 4;
@@ -782,7 +913,7 @@ function namaRonde(jumlahMatch) {
   position: absolute;
   z-index: 4;
   top: 4px;
-  right: 48px;
+  right: 92px;
   border: 1px solid rgba(179, 197, 215, 0.8);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
@@ -1145,5 +1276,62 @@ function namaRonde(jumlahMatch) {
 .dialog-form {
   display: grid;
   gap: 12px;
+}
+
+@media print {
+  @page {
+    size: A1 landscape;
+    margin: 8mm;
+  }
+
+  :global(.q-header),
+  :global(.q-drawer),
+  :global(.q-footer) {
+    display: none !important;
+  }
+
+  :global(.q-page-container) {
+    padding: 0 !important;
+  }
+
+  .bracket-page {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    background: #fff;
+  }
+
+  .bracket-content {
+    display: block;
+    height: auto;
+  }
+
+  .back-button,
+  .download-pdf-button,
+  .save-button,
+  .save-toggle-button,
+  .bracket-footer {
+    display: none !important;
+  }
+
+  .bracket-board {
+    overflow: visible;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .bracket-viewport {
+    width: var(--lebar-cetak) !important;
+    height: var(--tinggi-cetak) !important;
+    overflow: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .bracket-canvas {
+    min-width: 0;
+    transform: scale(var(--skala-cetak)) !important;
+  }
 }
 </style>

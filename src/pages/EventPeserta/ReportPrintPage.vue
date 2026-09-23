@@ -92,6 +92,8 @@ const loading = ref(true)
 const participants = ref([])
 const event = ref(null)
 const eventId = Number(route.query.master_event_id) || null
+const hadirTechnicalMeeting = statusKehadiranDariQuery(route.query.hadir_technical_meeting)
+const hadirRegistrasiUlang = statusKehadiranDariQuery(route.query.hadir_registrasi_ulang)
 
 const rows = computed(() =>
   participants.value
@@ -122,7 +124,13 @@ async function loadData() {
   loading.value = true
   try {
     const response = await api.get('/v3/event/peserta/cetak', {
-      params: eventId ? { master_event_id: eventId } : {},
+      params: Object.fromEntries(
+        Object.entries({
+          master_event_id: eventId,
+          hadir_technical_meeting: hadirTechnicalMeeting,
+          hadir_registrasi_ulang: hadirRegistrasiUlang,
+        }).filter(([, nilai]) => nilai !== null),
+      ),
     })
     participants.value = response.data?.data ?? []
     event.value = response.data?.meta?.event ?? null
@@ -169,6 +177,10 @@ function labelStatus(status) {
 
 function labelKehadiran(hadir) {
   return hadir ? 'Hadir' : 'Belum Hadir'
+}
+
+function statusKehadiranDariQuery(nilai) {
+  return nilai === '0' || nilai === 0 || nilai === '1' || nilai === 1 ? Number(nilai) : null
 }
 
 function cetak() {

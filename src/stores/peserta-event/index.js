@@ -26,7 +26,13 @@ export const usePesertaEventStore = defineStore('peserta-event', {
     hasMore: true,
     eventOptions: [],
     attendanceLoading: {},
-    params: { page: 1, search: '', master_event_id: null },
+    params: {
+      page: 1,
+      search: '',
+      master_event_id: null,
+      hadir_technical_meeting: null,
+      hadir_registrasi_ulang: null,
+    },
     form: initialForm(),
   }),
   actions: {
@@ -101,11 +107,13 @@ export const usePesertaEventStore = defineStore('peserta-event', {
           type: 'positive',
           message: response.data?.message || 'Kehadiran berhasil dicatat.',
         })
+        return true
       } catch (error) {
         Notify.create({
           type: 'negative',
           message: error.response?.data?.message || 'Kehadiran tidak dapat dicatat.',
         })
+        return false
       } finally {
         this.attendanceLoading[key] = false
       }

@@ -72,6 +72,38 @@
         >
           <template #prepend><q-icon name="event" /></template>
         </q-select>
+        <div class="attendance-filter-grid">
+          <q-select
+            v-model="store.params.hadir_technical_meeting"
+            :options="opsiStatusKehadiran"
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            clearable
+            dense
+            outlined
+            label="Technical Meeting"
+            @update:model-value="cari"
+          >
+            <template #prepend><q-icon name="groups" /></template>
+          </q-select>
+          <q-select
+            v-model="store.params.hadir_registrasi_ulang"
+            :options="opsiStatusKehadiran"
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            clearable
+            dense
+            outlined
+            label="Registrasi Ulang"
+            @update:model-value="cari"
+          >
+            <template #prepend><q-icon name="fact_check" /></template>
+          </q-select>
+        </div>
 
         <section class="participant-list-area">
           <q-virtual-scroll
@@ -133,7 +165,7 @@
                     icon="groups"
                     label="Hadir Technical Meeting"
                     :loading="store.sedangMenandaiKehadiran(item.id, 'technical_meeting')"
-                    @click="store.tandaiKehadiran(item.id, 'technical_meeting')"
+                    @click="tandaiKehadiran(item.id, 'technical_meeting')"
                   />
                   <q-badge v-else color="deep-purple-2" text-color="black" class="attendance-badge">
                     <q-icon name="check_circle" size="15px" class="q-mr-xs" /> Hadir Technical
@@ -149,7 +181,7 @@
                     icon="fact_check"
                     label="Hadir Registrasi Ulang"
                     :loading="store.sedangMenandaiKehadiran(item.id, 'registrasi_ulang')"
-                    @click="store.tandaiKehadiran(item.id, 'registrasi_ulang')"
+                    @click="tandaiKehadiran(item.id, 'registrasi_ulang')"
                   />
                   <q-badge v-else color="orange-2" text-color="black" class="attendance-badge">
                     <q-icon name="check_circle" size="15px" class="q-mr-xs" /> Hadir Registrasi
@@ -228,6 +260,10 @@ const participantList = ref(null)
 const exporting = ref(false)
 const dialogEdit = ref(false)
 const searchDariNotifikasi = String(route.query.search || '').trim()
+const opsiStatusKehadiran = [
+  { label: 'Sudah hadir', value: 1 },
+  { label: 'Belum hadir', value: 0 },
+]
 
 // Isi filter lebih awal agar request pertama langsung memakai nomor registrasi
 // dari notifikasi.
@@ -263,7 +299,7 @@ async function hapusPencarian() {
 function cetakPdf() {
   router.push({
     path: '/event-peserta/laporan',
-    query: store.params.master_event_id ? { master_event_id: store.params.master_event_id } : {},
+    query: parameterFilterPeserta(),
   })
 }
 
@@ -277,7 +313,7 @@ async function exportExcel() {
 
   try {
     const response = await api.get('/v3/event/peserta/cetak', {
-      params: store.params.master_event_id ? { master_event_id: store.params.master_event_id } : {},
+      params: parameterFilterPeserta(),
     })
     const peserta = response.data?.data ?? []
     const namaEvent = response.data?.meta?.event?.nama_event || 'Semua Event'
@@ -364,6 +400,26 @@ async function toggleDetail(id) {
   participantList.value?.refresh()
 }
 
+async function tandaiKehadiran(participantId, jenis) {
+  const berhasil = await store.tandaiKehadiran(participantId, jenis)
+  const filterBelumHadir =
+    jenis === 'technical_meeting'
+      ? store.params.hadir_technical_meeting === 0
+      : store.params.hadir_registrasi_ulang === 0
+
+  if (berhasil && filterBelumHadir) await store.getData({ reset: true })
+}
+
+function parameterFilterPeserta() {
+  return Object.fromEntries(
+    Object.entries({
+      master_event_id: store.params.master_event_id,
+      hadir_technical_meeting: store.params.hadir_technical_meeting,
+      hadir_registrasi_ulang: store.params.hadir_registrasi_ulang,
+    }).filter(([, nilai]) => nilai !== null && nilai !== undefined && nilai !== ''),
+  )
+}
+
 function formatTanggal(tanggal) {
   if (!tanggal) return '-'
 
@@ -437,6 +493,12 @@ function loadMore({ index, to }) {
   margin: 13px;
 }
 .list-card > .q-select {
+  margin: 0 13px 13px;
+}
+.attendance-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin: 0 13px 13px;
 }
 .list-card :deep(.q-field__label),
@@ -571,6 +633,9 @@ function loadMore({ index, to }) {
   font-size: 12px;
 }
 @media (max-width: 480px) {
+  .attendance-filter-grid {
+    grid-template-columns: 1fr;
+  }
   .participant-row {
     grid-template-columns: 38px minmax(0, 1fr);
   }
