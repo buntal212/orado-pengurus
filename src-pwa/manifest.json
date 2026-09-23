@@ -1,7 +1,7 @@
 {
   "name": "ORADO PROBOLINGGO",
   "short_name": "ORADO PROBOLINGGO",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#002451",
   "theme_color": "#002451",
   "display_override": ["fullscreen", "minimal-ui"],
